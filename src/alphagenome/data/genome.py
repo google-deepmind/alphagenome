@@ -650,6 +650,27 @@ class Variant:
   `Variant` class does not include sample information or variant call
   quality information.
 
+  This class represents various types of genetic mutations including:
+  
+  1. **Point Mutations**:
+     - **SNV (Single Nucleotide Variant)**: Single base substitution
+     - **Missense**: Changes amino acid in protein (e.g., A→C changes codon meaning)
+     - **Nonsense**: Creates premature stop codon (e.g., C→T creates TAA/TAG/TGA)
+     - **Silent**: Changes codon but not amino acid (due to codon redundancy)
+  
+  2. **Indels (Insertions/Deletions)**:
+     - **Frameshift**: Insertion/deletion not divisible by 3, shifts reading frame
+     - **In-frame**: Insertion/deletion divisible by 3, preserves reading frame
+  
+  3. **Structural Variants**:
+     - **Inversion**: Segment reversed in orientation
+     - **Translocation**: Segment moves between chromosomes
+     - **Copy Number Variations (CNV)**: Duplications/deletions of larger segments
+
+  Note: This class primarily handles sequence-level changes. Protein-level
+  effects (missense, nonsense) require additional translation logic not
+  included here.
+
   Attributes:
     chromosome: The chromosome name (e.g., 'chr1', '1').
     position: The 1-based position of the variant on the chromosome.
@@ -740,6 +761,16 @@ class Variant:
     return len(self.reference_bases) == 1 and len(self.alternate_bases) == 1
 
   @property
+  def is_point_mutation(self) -> bool:
+    """Return if the variant is a point mutation (single base change).
+    
+    Point mutations include SNVs and single nucleotide indels at a single
+    position. This is a broader category than SNV that includes single
+    base insertions or deletions.
+    """
+    return max(len(self.reference_bases), len(self.alternate_bases)) == 1
+
+  @property
   def is_deletion(self) -> bool:
     """Return if the variant is a deletion."""
     return len(self.reference_bases) > len(self.alternate_bases)
@@ -748,6 +779,101 @@ class Variant:
   def is_insertion(self) -> bool:
     """Return if the variant is an insertion."""
     return len(self.reference_bases) < len(self.alternate_bases)
+
+  @property
+  def is_indel(self) -> bool:
+    """Return if the variant is an insertion or deletion (indel)."""
+    return self.is_deletion or self.is_insertion
+
+  @property
+  def is_frameshift(self) -> bool:
+    """Return if the variant causes a frameshift mutation.
+    
+    Frameshift mutations occur when the number of inserted/deleted bases
+    is not divisible by 3, altering the reading frame of the protein-coding
+    sequence. This typically results in completely different amino acids
+    downstream and often premature termination.
+    
+    Note: This property only indicates potential for frameshift based on
+    sequence change. Actual frameshift depends on genomic context (coding
+    region, reading frame position).
+    """
+    if not self.is_indel:
+      return False
+    length_diff = abs(len(self.reference_bases) - len(self.alternate_bases))
+    return length_diff % 3 != 0
+
+  @property
+  def is_inframe_indel(self) -> bool:
+    """Return if the variant is an in-frame insertion or deletion.
+    
+    In-frame indels have lengths divisible by 3, preserving the reading frame
+    in protein-coding regions. These mutations typically result in insertion
+    or deletion of one or more amino acids without disrupting the rest of
+    the protein sequence.
+    """
+    if not self.is_indel:
+      return False
+    length_diff = abs(len(self.reference_bases) - len(self.alternate_bases))
+    return length_diff % 3 == 0
+
+  @property 
+  def is_inversion(self) -> bool:
+    """Return if the variant represents an inversion.
+    
+    Inversions occur when a segment of DNA is reversed end-to-end.
+    At sequence level, this would be represented by the alternate bases
+    being the reverse complement of the reference bases.
+    
+    Note: This check is simplified and may not detect all inversions,
+    especially complex ones involving non-contiguous regions.
+    """
+    if len(self.reference_bases) != len(self.alternate_bases):
+      return False
+    
+    # Simple check: alternate is reverse complement of reference
+    complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C', 'N': 'N'}
+    reverse_complement = ''.join(complement.get(base, 'N') 
+                                for base in reversed(self.reference_bases))
+    return self.alternate_bases == reverse_complement
+
+  @property
+  def is_complex(self) -> bool:
+    """Return if the variant is a complex substitution (not simple SNV/indel).
+    
+    Complex substitutions involve multiple changes at a single locus,
+    such as replacing multiple bases with a different number of bases
+    where neither is a simple insertion or deletion.
+    """
+    return (len(self.reference_bases) > 1 and 
+            len(self.alternate_bases) > 1 and
+            not self.is_deletion and 
+            not self.is_insertion)
+
+  @property
+  def length_change(self) -> int:
+    """Returns the net change in sequence length (positive for insertions)."""
+    return len(self.alternate_bases) - len(self.reference_bases)
+
+  @property
+  def is_potential_missense(self) -> bool:
+    """Return if the variant could cause a missense mutation (amino acid change).
+    
+    Note: This is a simplified check based on sequence change only.
+    Actual missense/nonsense determination requires codon translation
+    and knowledge of the reading frame.
+    """
+    return self.is_snv or self.is_inframe_indel
+
+  @property
+  def is_potential_nonsense(self) -> bool:
+    """Return if the variant could create a premature stop codon.
+    
+    Note: This requires codon translation context not available here.
+    This property always returns False as a placeholder - actual nonsense
+    detection requires additional biological context.
+    """
+    return False  # Placeholder - requires codon translation
 
   def copy(self) -> Self:
     """Returns a deep copy of the variant."""
@@ -848,6 +974,17 @@ class Variant:
       downstream.reference_bases = self.reference_bases[mid:]
       downstream.alternate_bases = self.alternate_bases[mid:]
       return upstream, downstream
+
+
+# Note: Translocation class would require multiple chromosomes/positions
+# and is not represented by the simple Variant class above.
+# For translocation representation, a separate StructuralVariant class
+# would be needed with attributes like:
+# - chromosome1, position1 (breakpoint 1)
+# - chromosome2, position2 (breakpoint 2)  
+# - orientation (head-to-head, head-to-tail, etc.)
+# This is beyond the scope of the current Variant class which assumes
+# single chromosomal location.
 
 
 @dataclasses.dataclass
@@ -1022,29 +1159,24 @@ def intersect_intervals(
   them.
 
   In these examples, the intersection is a point range (2,2)
-  ```
-      1  2  3  4
-    ..|..|..|..|..
-          <>        (start=2, end=2)
-    ------->        (..., end=2)
-  ```
+    1  2  3  4
+  ..|..|..|..|..
+        <>        (start=2, end=2)
+  ------->        (..., end=2)
 
-  ```
-      1  2  3  4
-    ..|..|..|..|..
-          <>        (start=2, end=2)
-          <-------  (start=2, end=...)
-  ```
+
+    1  2  3  4
+  ..|..|..|..|..
+        <>        (start=2, end=2)
+        <-------  (start=2, end=...)
 
   For consistency, this means that the following results in a point
   intersection:
 
-  ```
-      1  2  3  4
-    ..|..|..|..|..
-    ------->        (start=..., end=2)
-          <-------  (start=2, end=...)
-  ```
+    1  2  3  4
+  ..|..|..|..|..
+  ------->        (start=..., end=2)
+        <-------  (start=2, end=...)
 
   Args:
     lhs: A set of intervals.
