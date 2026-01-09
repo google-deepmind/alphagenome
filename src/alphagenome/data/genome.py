@@ -34,6 +34,59 @@ STRAND_OPTIONS = (STRAND_POSITIVE, STRAND_NEGATIVE, STRAND_UNSTRANDED)
 _INTERVAL_START_END_REGEX = re.compile(r'(-?\d+)-(-?\d+)')
 VALID_VARIANT_BASES = frozenset('ACGTN')
 
+# Standard genetic code for codon translation
+_STANDARD_GENETIC_CODE = {
+    'TTT': 'F', 'TTC': 'F', 'TTA': 'L', 'TTG': 'L',
+    'TCT': 'S', 'TCC': 'S', 'TCA': 'S', 'TCG': 'S',
+    'TAT': 'Y', 'TAC': 'Y', 'TAA': '*', 'TAG': '*',
+    'TGT': 'C', 'TGC': 'C', 'TGA': '*', 'TGG': 'W',
+    'CTT': 'L', 'CTC': 'L', 'CTA': 'L', 'CTG': 'L',
+    'CCT': 'P', 'CCC': 'P', 'CCA': 'P', 'CCG': 'P',
+    'CAT': 'H', 'CAC': 'H', 'CAA': 'Q', 'CAG': 'Q',
+    'CGT': 'R', 'CGC': 'R', 'CGA': 'R', 'CGG': 'R',
+    'ATT': 'I', 'ATC': 'I', 'ATA': 'I', 'ATG': 'M',
+    'ACT': 'T', 'ACC': 'T', 'ACA': 'T', 'ACG': 'T',
+    'AAT': 'N', 'AAC': 'N', 'AAA': 'K', 'AAG': 'K',
+    'AGT': 'S', 'AGC': 'S', 'AGA': 'R', 'AGG': 'R',
+    'GTT': 'V', 'GTC': 'V', 'GTA': 'V', 'GTG': 'V',
+    'GCT': 'A', 'GCC': 'A', 'GCA': 'A', 'GCG': 'A',
+    'GAT': 'D', 'GAC': 'D', 'GAA': 'E', 'GAG': 'E',
+    'GGT': 'G', 'GGC': 'G', 'GGA': 'G', 'GGG': 'G',
+}
+
+# Stop codons
+_STOP_CODONS = frozenset(['TAA', 'TAG', 'TGA'])
+
+
+class MutationType(enum.Enum):
+  """Classification of mutation types based on functional impact.
+
+  Attributes:
+    SYNONYMOUS: Mutation that does not change the amino acid (silent).
+    MISSENSE: Mutation that changes the amino acid.
+    NONSENSE: Mutation that introduces a premature stop codon.
+    FRAMESHIFT: Insertion or deletion not divisible by 3.
+    POINT: Single nucleotide variant (SNV).
+    INSERTION: Insertion of nucleotides.
+    DELETION: Deletion of nucleotides.
+    INDEL: Combined insertion and deletion.
+    STRUCTURAL: Large-scale structural variation.
+  """
+
+  SYNONYMOUS = 'synonymous'
+  MISSENSE = 'missense'
+  NONSENSE = 'nonsense'
+  FRAMESHIFT = 'frameshift'
+  POINT = 'point'
+  INSERTION = 'insertion'
+  DELETION = 'deletion'
+  INDEL = 'indel'
+  STRUCTURAL = 'structural'
+  UNKNOWN = 'unknown'
+
+  def __str__(self) -> str:
+    return self.value
+
 
 class Strand(enum.IntEnum):
   """Represents the strand of a DNA sequence.
@@ -50,46 +103,42 @@ class Strand(enum.IntEnum):
   UNSTRANDED = enum.auto()
 
   def __str__(self):
-    match self:
-      case Strand.POSITIVE:
-        return STRAND_POSITIVE
-      case Strand.NEGATIVE:
-        return STRAND_NEGATIVE
-      case Strand.UNSTRANDED:
-        return STRAND_UNSTRANDED
+    if self == Strand.POSITIVE:
+      return STRAND_POSITIVE
+    elif self == Strand.NEGATIVE:
+      return STRAND_NEGATIVE
+    elif self == Strand.UNSTRANDED:
+      return STRAND_UNSTRANDED
 
   @classmethod
   def from_str(cls, strand: str) -> Self:
-    match strand:
-      case '+':
-        return cls.POSITIVE
-      case '-':
-        return cls.NEGATIVE
-      case '.':
-        return cls.UNSTRANDED
-      case _:
-        raise ValueError(f'Strand needs to be in {STRAND_OPTIONS}')
+    if strand == '+':
+      return cls.POSITIVE
+    elif strand == '-':
+      return cls.NEGATIVE
+    elif strand == '.':
+      return cls.UNSTRANDED
+    else:
+      raise ValueError(f'Strand needs to be in {STRAND_OPTIONS}')
 
   def to_proto(self) -> dna_model_pb2.Strand:
-    match self:
-      case Strand.POSITIVE:
-        return dna_model_pb2.Strand.STRAND_POSITIVE
-      case Strand.NEGATIVE:
-        return dna_model_pb2.Strand.STRAND_NEGATIVE
-      case Strand.UNSTRANDED:
-        return dna_model_pb2.Strand.STRAND_UNSTRANDED
+    if self == Strand.POSITIVE:
+      return dna_model_pb2.Strand.STRAND_POSITIVE
+    elif self == Strand.NEGATIVE:
+      return dna_model_pb2.Strand.STRAND_NEGATIVE
+    elif self == Strand.UNSTRANDED:
+      return dna_model_pb2.Strand.STRAND_UNSTRANDED
 
   @classmethod
   def from_proto(cls, strand: dna_model_pb2.Strand) -> Self:
-    match strand:
-      case dna_model_pb2.Strand.STRAND_POSITIVE:
-        return cls.POSITIVE
-      case dna_model_pb2.Strand.STRAND_NEGATIVE:
-        return cls.NEGATIVE
-      case dna_model_pb2.Strand.STRAND_UNSTRANDED:
-        return cls.UNSTRANDED
-      case _:
-        raise ValueError(f'Strand needs to be in {STRAND_OPTIONS}')
+    if strand == dna_model_pb2.Strand.STRAND_POSITIVE:
+      return cls.POSITIVE
+    elif strand == dna_model_pb2.Strand.STRAND_NEGATIVE:
+      return cls.NEGATIVE
+    elif strand == dna_model_pb2.Strand.STRAND_UNSTRANDED:
+      return cls.UNSTRANDED
+    else:
+      raise ValueError(f'Strand needs to be in {STRAND_OPTIONS}')
 
 
 PYRANGES_INTERVAL_COLUMNS = ('Chromosome', 'Start', 'End', 'Strand', 'Name')
@@ -628,17 +677,16 @@ class VariantFormat(enum.Enum):
 
   def to_regex(self) -> re.Pattern[str]:
     """Returns a regular expression for the variant format."""
-    match self:
-      case VariantFormat.DEFAULT:
-        return _DEFAULT_REGEX
-      case VariantFormat.GTEX:
-        return _GTEX_REGEX
-      case VariantFormat.OPEN_TARGETS:
-        return _OPEN_TARGETS_REGEX
-      case VariantFormat.OPEN_TARGETS_BIGQUERY:
-        return _OPEN_TARGETS_BIGQUERY_REGEX
-      case VariantFormat.GNOMAD:
-        return _GNOMAD_REGEX
+    if self == VariantFormat.DEFAULT:
+      return _DEFAULT_REGEX
+    elif self == VariantFormat.GTEX:
+      return _GTEX_REGEX
+    elif self == VariantFormat.OPEN_TARGETS:
+      return _OPEN_TARGETS_REGEX
+    elif self == VariantFormat.OPEN_TARGETS_BIGQUERY:
+      return _OPEN_TARGETS_BIGQUERY_REGEX
+    elif self == VariantFormat.GNOMAD:
+      return _GNOMAD_REGEX
 
 
 @dataclasses.dataclass
@@ -662,6 +710,7 @@ class Variant:
       alternate_bases='TG', then the actual (alternate) sequence would be ATGT.
     name: An optional name for the variant (e.g., a dbSNP ID like rs206437).
     info: An optional dictionary for additional variant information.
+    mutation_type: Cached mutation type classification (lazy-loaded).
   """
 
   chromosome: str
@@ -671,6 +720,9 @@ class Variant:
   name: str = dataclasses.field(default='', compare=False, hash=False)
   info: dict[str, Any] = dataclasses.field(
       default_factory=dict, repr=False, compare=False, hash=False
+  )
+  _mutation_type: MutationType = dataclasses.field(
+      default=MutationType.UNKNOWN, init=False, repr=False, compare=False
   )
 
   def __post_init__(self):
@@ -748,6 +800,81 @@ class Variant:
   def is_insertion(self) -> bool:
     """Return if the variant is an insertion."""
     return len(self.reference_bases) < len(self.alternate_bases)
+
+  @property
+  def is_frameshift(self) -> bool:
+    """Return if the variant is a frameshift (indel not divisible by 3)."""
+    indel_size = abs(len(self.reference_bases) - len(self.alternate_bases))
+    return indel_size > 0 and indel_size % 3 != 0
+
+  @property
+  def is_indel(self) -> bool:
+    """Return if the variant is an insertion or deletion."""
+    return self.is_insertion or self.is_deletion
+
+  @property
+  def is_structural(self) -> bool:
+    """Return if the variant is a structural variant (large indel)."""
+    indel_size = abs(len(self.reference_bases) - len(self.alternate_bases))
+    return indel_size >= 50
+
+  def get_mutation_type(
+      self,
+      reference_codon: str = '',
+      extractor: '_FastaExtractorType | None' = None,
+  ) -> MutationType:
+    """Classifies the mutation type based on functional impact.
+
+    Args:
+      reference_codon: Optional reference codon for synonymous/missense detection.
+      extractor: Optional FastaExtractor for automatic codon extraction.
+
+    Returns:
+      The classified MutationType.
+    """
+    # Frameshift takes precedence
+    if self.is_frameshift:
+      return MutationType.FRAMESHIFT
+
+    # Structural variants
+    if self.is_structural:
+      return MutationType.STRUCTURAL
+
+    # SNV analysis for synonymous/missense/nonsense
+    if self.is_snv:
+      if reference_codon:
+        ref_amino = _get_codon_amino_acid(reference_codon)
+        if self._creates_stop_codon(reference_codon):
+          return MutationType.NONSENSE
+        elif _get_codon_amino_acid(reference_codon) == ref_amino:
+          return MutationType.SYNONYMOUS
+        else:
+          return MutationType.MISSENSE
+      else:
+        return MutationType.POINT
+
+    # Indels
+    if self.is_indel:
+      ref_len = len(self.reference_bases)
+      alt_len = len(self.alternate_bases)
+      if ref_len > alt_len:
+        return MutationType.DELETION
+      else:
+        return MutationType.INSERTION
+
+    return MutationType.UNKNOWN
+
+  def _creates_stop_codon(self, reference_codon: str) -> bool:
+    """Check if mutation creates a stop codon in reference context."""
+    if len(reference_codon) < 3 or not self.is_snv:
+      return False
+    position_in_codon = (self.position - 1) % 3
+    mut_codon = (
+        reference_codon[:position_in_codon]
+        + self.alternate_bases
+        + reference_codon[position_in_codon + 1 :]
+    )
+    return mut_codon.upper() in _STOP_CODONS
 
   def copy(self) -> Self:
     """Returns a deep copy of the variant."""
@@ -848,6 +975,12 @@ class Variant:
       downstream.reference_bases = self.reference_bases[mid:]
       downstream.alternate_bases = self.alternate_bases[mid:]
       return upstream, downstream
+
+
+def _get_codon_amino_acid(codon: str) -> str:
+  """Translates a codon to its amino acid abbreviation."""
+  codon_upper = codon.upper()
+  return _STANDARD_GENETIC_CODE.get(codon_upper, 'X')
 
 
 @dataclasses.dataclass
