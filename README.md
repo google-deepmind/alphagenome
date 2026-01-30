@@ -139,7 +139,7 @@ install`:
 
 ```bash
 $ git clone https://github.com/google-deepmind/alphagenome.git
-$ pip install ./alphagenome
+$ pip install -e .
 ```
 
 See [the documentation](https://www.alphagenomedocs.com/installation.html) for
