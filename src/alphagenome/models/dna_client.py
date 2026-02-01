@@ -17,10 +17,12 @@
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 import concurrent.futures
 import functools
+import logging
 import random
 import time
 from typing import TypeVar
 
+from alphagenome import cache_utils
 from alphagenome import tensor_utils
 from alphagenome.data import genome
 from alphagenome.data import junction_data
@@ -141,7 +143,7 @@ def _read_tensor_chunks(
         PredictResponse
         | dna_model_service_pb2.PredictVariantResponse
         | dna_model_service_pb2.ScoreVariantResponse
-        | dna_model_service_pb2.ScoreIntervalResponse
+        | dna_model_service_pb2.ScoreIsmVariantResponse
     ],
     chunk_count: int,
 ) -> Iterable[tensor_pb2.TensorChunk]:
@@ -507,12 +509,73 @@ class DnaClient(dna_model.DnaModel):
       channel: grpc.Channel,
       model_version: ModelVersion | None = None,
       metadata: Sequence[tuple[str, str]] = (),
+      cache_dir: str | None = None,
+      log_level: str = 'WARNING',
   ):
     self._channel = channel
     self._metadata = metadata
     self._model_version = (
         model_version.name if model_version is not None else None
     )
+    if cache_dir:
+      self._cache = cache_utils.DiskCache(cache_dir)
+    else:
+      self._cache = cache_utils.NoCache()
+    
+    # Initialize logger
+    self._logger = logging.getLogger(f'{__name__}.DnaClient')
+    self._logger.setLevel(getattr(logging, log_level.upper(), logging.WARNING))
+    if not self._logger.handlers:
+      handler = logging.StreamHandler()
+      formatter = logging.Formatter(
+          '[%(asctime)s] [%(levelname)s] %(message)s',
+          datefmt='%Y-%m-%d %H:%M:%S'
+      )
+      handler.setFormatter(formatter)
+      self._logger.addHandler(handler)
+    
+    # Cache statistics
+    self._cache_stats = {
+        'total_requests': 0,
+        'cache_hits': 0,
+        'api_calls': 0,
+    }
+    
+    self._logger.info(
+        f'DnaClient initialized with cache: {"enabled" if cache_dir else "disabled"}'
+    )
+
+  def _make_cache_key(self, method_name: str, *args, **kwargs) -> str:
+    """Helper to create a cache key for a method call."""
+    return cache_utils.make_key(method_name, args, kwargs)
+
+  def print_cache_stats(self):
+    """Print cache performance statistics."""
+    total = self._cache_stats['total_requests']
+    hits = self._cache_stats['cache_hits']
+    calls = self._cache_stats['api_calls']
+    
+    if total == 0:
+      print('[Cache Stats] No requests made yet.')
+      return
+    
+    hit_rate = (hits / total * 100) if total > 0 else 0
+    print(f'[Cache Stats] Total Requests: {total}')
+    print(f'[Cache Stats] Cache Hits: {hits} ({hit_rate:.1f}%)')
+    print(f'[Cache Stats] API Calls: {calls}')
+    if calls > 0:
+      print(f'[Cache Stats] Savings: {hits} requests avoided!')
+
+  def close(self):
+    """Closes the underlying gRPC channel."""
+    self._logger.info('Closing DnaClient')
+    self._channel.close()
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, exc_type, exc_value, traceback):
+    self.close()
 
   @retry_rpc
   def predict_sequence(
@@ -539,6 +602,25 @@ class DnaClient(dna_model.DnaModel):
     Returns:
       Output for the provided DNA sequence.
     """
+    # Check cache
+    self._cache_stats['total_requests'] += 1
+    cache_key = self._make_cache_key(
+        'predict_sequence',
+        sequence,
+        organism=organism,
+        requested_outputs=tuple(sorted(requested_outputs)), # sort for stability
+        ontology_terms=tuple(sorted(ontology_terms)) if ontology_terms else None,
+        interval=interval
+    )
+    if (cached := self._cache.get(cache_key)) is not None:
+      self._cache_stats['cache_hits'] += 1
+      self._logger.debug(f'Cache HIT: predict_sequence for sequence length {len(sequence)}')
+      return cached
+    
+    self._cache_stats['api_calls'] += 1
+    self._logger.info(f'API Call: predict_sequence for sequence length {len(sequence)}')
+    start_time = time.time()
+
     if not (unique_values := set(sequence)).issubset(
         _VALID_SEQUENCE_CHARACTERS
     ):
@@ -548,18 +630,25 @@ class DnaClient(dna_model.DnaModel):
           f' invalid characters: "{invalid_characters}"'
       )
     validate_sequence_length(len(sequence))
-    requested_outputs = [o.to_proto() for o in dict.fromkeys(requested_outputs)]
+    requested_outputs_protos = [o.to_proto() for o in dict.fromkeys(requested_outputs)]
     request = dna_model_service_pb2.PredictSequenceRequest(
         sequence=sequence,
         organism=organism.to_proto(),
         ontology_terms=_convert_ontologies_to_protos(ontology_terms),
-        requested_outputs=requested_outputs,
+        requested_outputs=requested_outputs_protos,
         model_version=self._model_version,
     )
     responses = dna_model_service_pb2_grpc.DnaModelServiceStub(
         self._channel
     ).PredictSequence(iter([request]), metadata=self._metadata)
-    return _make_output(responses, interval=interval)
+    result = _make_output(responses, interval=interval)
+    
+    elapsed = time.time() - start_time
+    self._logger.info(f'API Call completed: predict_sequence ({elapsed:.2f}s)')
+    
+    # Store in cache
+    self._cache.set(cache_key, result)
+    return result
 
   @retry_rpc
   def predict_interval(
@@ -583,19 +672,44 @@ class DnaClient(dna_model.DnaModel):
     Returns:
       Output for the provided DNA interval.
     """
+    # Check cache
+    self._cache_stats['total_requests'] += 1
+    cache_key = self._make_cache_key(
+        'predict_interval',
+        interval,
+        organism=organism,
+        requested_outputs=tuple(sorted(requested_outputs)),
+        ontology_terms=tuple(sorted(ontology_terms)) if ontology_terms else None
+    )
+    if (cached := self._cache.get(cache_key)) is not None:
+      self._cache_stats['cache_hits'] += 1
+      self._logger.debug(f'Cache HIT: predict_interval for {interval}')
+      return cached
+    
+    self._cache_stats['api_calls'] += 1
+    self._logger.info(f'API Call: predict_interval for {interval}')
+    start_time = time.time()
+
     validate_sequence_length(interval.width)
-    requested_outputs = [o.to_proto() for o in dict.fromkeys(requested_outputs)]
+    requested_outputs_protos = [o.to_proto() for o in dict.fromkeys(requested_outputs)]
     request = dna_model_service_pb2.PredictIntervalRequest(
         interval=interval.to_proto(),
         organism=organism.to_proto(),
         ontology_terms=_convert_ontologies_to_protos(ontology_terms),
-        requested_outputs=requested_outputs,
+        requested_outputs=requested_outputs_protos,
         model_version=self._model_version,
     )
     responses = dna_model_service_pb2_grpc.DnaModelServiceStub(
         self._channel
     ).PredictInterval(iter([request]), metadata=self._metadata)
-    return _make_output(responses)
+    result = _make_output(responses)
+    
+    elapsed = time.time() - start_time
+    self._logger.info(f'API Call completed: predict_interval ({elapsed:.2f}s)')
+
+    # Store in cache
+    self._cache.set(cache_key, result)
+    return result
 
   @retry_rpc
   def predict_variant(
@@ -621,20 +735,46 @@ class DnaClient(dna_model.DnaModel):
     Returns:
       Variant output for the provided DNA interval and variant.
     """
+    # Check cache
+    self._cache_stats['total_requests'] += 1
+    cache_key = self._make_cache_key(
+        'predict_variant',
+        interval,
+        variant,
+        organism=organism,
+        requested_outputs=tuple(sorted(requested_outputs)),
+        ontology_terms=tuple(sorted(ontology_terms)) if ontology_terms else None
+    )
+    if (cached := self._cache.get(cache_key)) is not None:
+      self._cache_stats['cache_hits'] += 1
+      self._logger.debug(f'Cache HIT: predict_variant for {variant}')
+      return cached
+    
+    self._cache_stats['api_calls'] += 1
+    self._logger.info(f'API Call: predict_variant for {variant}')
+    start_time = time.time()
+
     validate_sequence_length(interval.width)
-    requested_outputs = [o.to_proto() for o in dict.fromkeys(requested_outputs)]
+    requested_outputs_protos = [o.to_proto() for o in dict.fromkeys(requested_outputs)]
     request = dna_model_service_pb2.PredictVariantRequest(
         interval=interval.to_proto(),
         variant=variant.to_proto(),
         organism=organism.to_proto(),
         ontology_terms=_convert_ontologies_to_protos(ontology_terms),
-        requested_outputs=requested_outputs,
+        requested_outputs=requested_outputs_protos,
         model_version=self._model_version,
     )
     responses = dna_model_service_pb2_grpc.DnaModelServiceStub(
         self._channel
     ).PredictVariant(iter([request]), metadata=self._metadata)
-    return _make_variant_output(responses)
+    result = _make_variant_output(responses)
+    
+    elapsed = time.time() - start_time
+    self._logger.info(f'API Call completed: predict_variant ({elapsed:.2f}s)')
+
+    # Store in cache
+    self._cache.set(cache_key, result)
+    return result
 
   @retry_rpc
   def score_interval(
@@ -877,6 +1017,8 @@ def create(
     model_version: ModelVersion | None = None,
     timeout: float | None = None,
     address: str | None = None,
+    cache_dir: str | None = None,
+    log_level: str = 'WARNING',
 ) -> DnaClient:
   """Creates a model client for a given API key.
 
@@ -886,9 +1028,11 @@ def create(
       none is provided, the default model will be used.
     timeout: Optional timeout for waiting for the channel to be ready.
     address: Optional server address to connect to.
+    cache_dir: Optional directory to store cached responses.
+    log_level: Logging level (DEBUG, INFO, WARNING, ERROR). Default: WARNING.
 
   Returns:
-   `DnaClient` instance.
+    `DnaClient` instance.
   """
   options = [
       ('grpc.max_send_message_length', -1),
@@ -904,4 +1048,6 @@ def create(
       channel=channel,
       model_version=model_version,
       metadata=[('x-goog-api-key', api_key)],
+      cache_dir=cache_dir,
+      log_level=log_level,
   )
