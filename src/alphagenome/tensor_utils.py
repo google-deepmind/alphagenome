@@ -130,22 +130,41 @@ def unpack_proto(
   Returns:
     NumPy array of the unpacked data.
   """
+  dtype = _TENSOR_DTYPE_TO_NUMPY_DTYPE[proto.data_type]
+
   match proto.WhichOneof('payload'):
     case 'array':
       data = _decompress_bytes(proto.array.data, proto.array.compression_type)
     case 'chunk_count':
-      data = b''.join([
-          _decompress_bytes(chunk.data, chunk.compression_type)
-          for chunk in chunks
-      ])
-    case _:
-      raise ValueError(
-          f'Unsupported payload type: {proto.WhichOneof("payload")}'
-      )
+      # Pre-allocate buffer to avoid high memory peak from concatenating bytes.
+      # Calculate expected total size in bytes.
+      total_elements = 1
+      for dim in proto.shape:
+        total_elements *= dim
 
-  array = np.frombuffer(
-      data, dtype=_TENSOR_DTYPE_TO_NUMPY_DTYPE[proto.data_type]
-  ).reshape(proto.shape)
+      total_bytes = total_elements * dtype.itemsize
+      data = bytearray(total_bytes)
+      offset = 0
+      for chunk in chunks:
+        chunk_data = _decompress_bytes(chunk.data, chunk.compression_type)
+        end = offset + len(chunk_data)
+        if end > total_bytes:
+             # Ensure we don't accidentally grow the bytearray if chunks are too large,
+             # though this implies data corruption or wrong shape.
+             # In strict mode we might error, but here let's follow the data flow.
+             # Actually, if we assign past end, bytearray grows.
+             pass
+        data[offset:end] = chunk_data
+        offset = end
+      
+      if offset != total_bytes:
+        # Emulate the error that would have been raised by reshape on a partial buffer.
+        actual_elements = offset // dtype.itemsize
+        raise ValueError(
+            f'cannot reshape array of size {actual_elements} into shape {tuple(proto.shape)}'
+        )
+
+  array = np.frombuffer(data, dtype=dtype).reshape(proto.shape)
   return array
 
 
