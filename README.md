@@ -129,11 +129,58 @@ The AlphaGenome client includes enterprise-grade features for large-scale genomi
 
 | Feature | Capability | Use Case |
 |---------|-----------|----------|
-| **Intelligent Caching** | DiskCache with 85%+ hit rates | Iterative analysis, repeated regions |
+| **Enhanced Caching** | LRU eviction, TTL, size limits | Prevent disk overflow, optimize memory |
+| **Cache Monitoring** | Hit rates, size tracking, statistics | Production observability, debugging |
 | **Batch Processing** | Process 100,000+ variants | GWAS studies, cohort analyses |
 | **Crash Recovery** | Automatic checkpoint/resume | 48-hour analyses, unreliable networks |
 | **Memory Streaming** | JSONL output for unlimited batches | Large-scale variant scoring |
 | **Observability** | Real-time logging & statistics | Production monitoring, debugging |
+
+### 💾 Enhanced Cache Management
+
+The DiskCache now includes production-ready features to prevent common issues in long-running analyses:
+
+```python
+from alphagenome.models import dna_client
+from alphagenome import CacheConfig
+
+# Production-ready cache configuration
+client = dna_client.create(
+    API_KEY,
+    cache_dir='./cache',
+    cache_config=CacheConfig(
+        max_size_bytes=10 * 1024**3,  # 10 GB limit - prevents disk overflow
+        ttl_seconds=30 * 24 * 3600,   # 30 days - auto-expire old entries
+        eviction_policy='lru',         # Keep most recently used data
+    ),
+    log_level='INFO'
+)
+
+# Monitor cache performance
+stats = client.cache.cache_stats()
+print(f"Cache hit rate: {stats['hit_rate']:.1f}%")
+print(f"Total size: {stats['total_size_mb']:.2f} MB / {stats['max_size_mb']:.0f} MB")
+print(f"Evictions: {stats['evictions']}")
+
+# Manual cleanup if needed
+client.cache.cleanup(aggressive=True)
+```
+
+**Key Features:**
+- ✅ **Size Limits**: Automatically evicts old entries when limit reached (prevents disk full errors)
+- ✅ **TTL Expiration**: Remove stale cache entries after configurable time period
+- ✅ **LRU Eviction**: Keeps most valuable (recently used) data in cache
+- ✅ **Crash Resistant**: Metadata survives system crashes with atomic writes
+- ✅ **Statistics**: Track hit rates, size usage, and cache efficiency
+- ✅ **Auto-Migration**: Seamlessly upgrades existing caches without data loss
+
+**Default Behavior (Backward Compatible):**
+```python
+# Simple usage - works exactly as before
+client = dna_client.create(API_KEY, cache_dir='./cache')
+```
+
+The enhanced cache is fully backward compatible. Existing code requires no changes, while new features are opt-in for production deployments.
 
 ### 🚀 Large-Scale Batch Processing
 

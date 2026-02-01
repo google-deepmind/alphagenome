@@ -20,6 +20,9 @@ __version__ = '0.5.1'
 from alphagenome.batch_runner import BatchRunner
 from alphagenome.batch_runner import CheckpointManager
 from alphagenome.cache_utils import Cache
+from alphagenome.cache_utils import CacheConfig
+from alphagenome.cache_utils import CacheEntry
+from alphagenome.cache_utils import CacheStatistics
 from alphagenome.cache_utils import DiskCache
 from alphagenome.cache_utils import NoCache
 
@@ -27,6 +30,10 @@ __all__ = [
     'BatchRunner',
     'CheckpointManager',
     'Cache',
+    'CacheConfig',
+    'CacheEntry',
+    'CacheStatistics',
     'DiskCache',
     'NoCache',
 ]
+
