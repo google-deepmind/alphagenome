@@ -123,6 +123,136 @@ plot_components.plot(
 plt.show()
 ```
 
+## Production Features
+
+The AlphaGenome client includes enterprise-grade features for large-scale genomic analyses:
+
+| Feature | Capability | Use Case |
+|---------|-----------|----------|
+| **Intelligent Caching** | DiskCache with 85%+ hit rates | Iterative analysis, repeated regions |
+| **Batch Processing** | Process 100,000+ variants | GWAS studies, cohort analyses |
+| **Crash Recovery** | Automatic checkpoint/resume | 48-hour analyses, unreliable networks |
+| **Memory Streaming** | JSONL output for unlimited batches | Large-scale variant scoring |
+| **Observability** | Real-time logging & statistics | Production monitoring, debugging |
+
+### 🚀 Large-Scale Batch Processing
+
+For production workloads (10,000+ variants), use the `BatchRunner` with automatic checkpointing:
+
+```python
+from alphagenome.models import dna_client
+from alphagenome.batch_runner import BatchRunner
+from alphagenome.data import genome
+
+# Create client with caching and logging
+client = dna_client.create(
+    API_KEY,
+    cache_dir='./cache',      # Enable result caching
+    log_level='INFO'          # See real-time progress
+)
+
+# Create resilient batch runner
+runner = BatchRunner(
+    client=client,
+    checkpoint_file='gwas_analysis.json',  # Resume on crash
+    on_error='skip',                       # Continue on failures
+    max_retries=3,
+    stream_results=True,                   # Memory-efficient for 100k+ items
+    results_file='results.jsonl'
+)
+
+# Process 100,000 variants (crash-safe!)
+results = runner.batch_predict_variants(
+    intervals=your_intervals,
+    variants=your_variants,
+    organism=dna_client.Organism.HOMO_SAPIENS,
+    requested_outputs=[dna_client.OutputType.RNA_SEQ],
+    max_workers=5,
+    progress_bar=True
+)
+```
+
+**Key Benefits:**
+- ✅ **Crash Recovery**: Automatically resumes from last checkpoint
+- ✅ **Memory Efficient**: JSONL streaming supports unlimited batch sizes
+- ✅ **Network Resilience**: Exponential backoff with jitter for retries
+- ✅ **Signal Handling**: Graceful shutdown on Ctrl+C saves progress
+
+### 📊 Monitoring & Statistics
+
+Track performance and optimize your workflows:
+
+```python
+# View cache performance
+client.print_cache_stats()
+# Output:
+# [Cache Stats] Total Requests: 1000
+# [Cache Stats] Cache Hits: 850 (85.0%)
+# [Cache Stats] API Calls: 150
+# [Cache Stats] Savings: 850 requests avoided!
+
+# Check batch progress
+stats = runner.checkpoint_manager.get_stats()
+print(f"Completed: {stats['completed']}/{stats['total']}")
+print(f"Failed: {stats['failed']}, Pending: {stats['pending']}")
+```
+
+**Logging Levels:**
+- `DEBUG`: Cache hits/misses, detailed timing
+- `INFO`: API calls, batch progress
+- `WARNING`: Retries, approaching rate limits (default)
+- `ERROR`: Critical failures
+
+### 🎯 Best Practices
+
+**Thread Configuration:**
+```python
+# For I/O-bound workloads (API calls):
+max_workers = 5-10  # Good starting point
+
+# For CPU-heavy post-processing:
+max_workers = os.cpu_count()
+```
+
+**Memory Management:**
+```python
+# For small batches (< 10,000 items):
+runner = BatchRunner(client, stream_results=False)
+
+# For large batches (100,000+ items):
+runner = BatchRunner(
+    client,
+    stream_results=True,
+    results_file='results.jsonl'
+)
+```
+
+**Checkpoint Strategy:**
+```python
+# Frequent checkpoints (slower, safer):
+checkpoint_interval=5
+
+# Balanced (recommended):
+checkpoint_interval=10
+
+# Less frequent (faster, more at-risk):
+checkpoint_interval=50
+```
+
+### 🔄 Resume After Crash
+
+If your analysis crashes, simply re-run the same code:
+
+```python
+# First run: processes items 0-7500, then crashes
+runner.batch_predict_variants(...)  # Crash at 75%
+
+# Second run: automatically skips 0-7500, starts at 7501
+runner.batch_predict_variants(...)  # Resumes seamlessly!
+```
+
+The checkpoint file (`gwas_analysis.json`) tracks progress with atomic writes, preventing corruption.
+
 ## Installation
 
 <!-- mdformat off(disable for [!TIP] format) -->
