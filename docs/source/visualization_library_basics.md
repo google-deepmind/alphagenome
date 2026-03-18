@@ -41,6 +41,27 @@ components -- such as locations of promoters or variants -- can be overlaid via
 a list of annotations that are passed to
 {func}`~alphagenome.visualization.plot_components.plot`.
 
+## Aligning REF and ALT tracks
+
+When visualizing long variants (such as large deletions or insertions), the REF and ALT tracks may have different lengths and coordinate systems. To correctly overlay them using {class}`~alphagenome.visualization.plot_components.OverlaidTracks`, you should first align them to a common coordinate system (usually REF).
+
+We provide a utility function for this purpose:
+
+```python
+from alphagenome.visualization import track_alignment
+
+# ... generate ref_track, alt_track, and variant ...
+
+ref_aligned, alt_aligned = track_alignment.align_ref_alt_tracks(
+    ref_track, alt_track, variant
+)
+
+# Now plot using OverlaidTracks
+# ...
+```
+
+This utility interpolates the ALT track onto the REF coordinate grid. Deleted regions are filled with NaNs (appearing as gaps), and insertions are compressed. This ensures that the tracks are visually aligned.
+
 ## Custom plotting
 
 For users interested in configuring novel components, extend the
