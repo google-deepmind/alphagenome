@@ -24,7 +24,7 @@ _T = TypeVar('_T')
 
 
 def jaxtyped(fn: _T) -> _T:
-  """Wrapper around jaxtyping.jaxtyped that uses typeguard iff typeguard < 3."""
+  """Wrapper around jaxtyping.jaxtyped that uses typeguard if typeguard < 3."""
   try:
     major, *_ = importlib.metadata.version('typeguard').split('.')
   except importlib.metadata.PackageNotFoundError:
