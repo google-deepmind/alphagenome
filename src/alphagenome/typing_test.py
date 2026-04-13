@@ -15,12 +15,14 @@
 import importlib.metadata
 from unittest import mock
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome import typing
 import jaxtyping
-from jaxtyping import Float32  # pylint: disable=g-multiple-import, g-importing-member
 import numpy as np
+from absl.testing import absltest, parameterized
+from jaxtyping import (
+  Float32,  # pylint: disable=g-multiple-import, g-importing-member
+)
+
+from alphagenome import typing
 
 
 class TypingTest(parameterized.TestCase):

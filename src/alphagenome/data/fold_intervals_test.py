@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
+import pandas as pd
+from absl.testing import absltest, parameterized
+
 from alphagenome.data import fold_intervals
 from alphagenome.models import dna_client
-import pandas as pd
-
 
 _dummy_intervals = pd.DataFrame({
     'chromosome': ['chr' + str(i) for i in range(8)],

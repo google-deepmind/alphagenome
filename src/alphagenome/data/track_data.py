@@ -15,18 +15,22 @@
 
 """Track data container analogous to AnnData."""
 
-from collections.abc import Sequence
 import copy
 import dataclasses
 import enum
+from collections.abc import Sequence
 from typing import Any, Union
 
-from alphagenome import typing
-from alphagenome.data import genome
-from alphagenome.data import ontology
-from jaxtyping import Bool, Float32, Int32  # pylint: disable=g-multiple-import, g-importing-member
 import numpy as np
 import pandas as pd
+from jaxtyping import (  # pylint: disable=g-multiple-import, g-importing-member
+  Bool,
+  Float32,
+  Int32,
+)
+
+from alphagenome import typing
+from alphagenome.data import genome, ontology
 
 # Required columns: name, strand.
 # Optional standardized columns: cell_type, assay, padding.

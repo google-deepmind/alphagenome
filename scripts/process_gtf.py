@@ -16,16 +16,13 @@
 
 import os
 import tempfile
-from urllib import parse
-from urllib import request
+from urllib import parse, request
 
-from absl import app
-from absl import flags
-from absl import logging
-from alphagenome.data import transcript as transcript_utils
 import pandas as pd
 import pyranges
+from absl import app, flags, logging
 
+from alphagenome.data import transcript as transcript_utils
 
 _GTF_PATH = flags.DEFINE_string(
     'gtf_path', None, 'Path to GTF file.', required=True

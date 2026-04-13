@@ -16,12 +16,12 @@
 
 from collections.abc import Iterable, Sequence
 
-from alphagenome.protos import tensor_pb2
 import immutabledict
 import ml_dtypes
 import numpy as np
 import zstandard
 
+from alphagenome.protos import tensor_pb2
 
 _TENSOR_DTYPE_TO_NUMPY_DTYPE = immutabledict.immutabledict({
     tensor_pb2.DataType.DATA_TYPE_BFLOAT16: np.dtype(ml_dtypes.bfloat16),

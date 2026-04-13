@@ -16,10 +16,10 @@
 
 import enum
 
-from alphagenome.models import dna_client
 import immutabledict
 import pandas as pd
 
+from alphagenome.models import dna_client
 
 _DEFAULT_EXAMPLE_REGIONS = immutabledict.immutabledict({
     dna_client.Organism.HOMO_SAPIENS: (

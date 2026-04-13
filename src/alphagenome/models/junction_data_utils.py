@@ -16,14 +16,12 @@
 
 from collections.abc import Iterable, Sequence
 
-from alphagenome import tensor_utils
-from alphagenome.data import genome
-from alphagenome.data import junction_data
-from alphagenome.data import ontology
-from alphagenome.protos import dna_model_pb2
-from alphagenome.protos import tensor_pb2
 import numpy as np
 import pandas as pd
+
+from alphagenome import tensor_utils
+from alphagenome.data import genome, junction_data, ontology
+from alphagenome.protos import dna_model_pb2, tensor_pb2
 
 
 def to_protos(

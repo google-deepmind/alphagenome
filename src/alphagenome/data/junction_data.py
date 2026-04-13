@@ -17,16 +17,19 @@
 `JunctionData` stores splice junction data for a given transcript or interval.
 """
 
-from collections.abc import Sequence
 import dataclasses
+from collections.abc import Sequence
 from typing import Any
 
-from alphagenome import typing
-from alphagenome.data import genome
-from alphagenome.data import ontology
-from jaxtyping import Float, Shaped  # pylint: disable=g-multiple-import, g-importing-member
 import numpy as np
 import pandas as pd
+from jaxtyping import (  # pylint: disable=g-multiple-import, g-importing-member
+  Float,
+  Shaped,
+)
+
+from alphagenome import typing
+from alphagenome.data import genome, ontology
 
 JunctionMetadata = pd.DataFrame
 

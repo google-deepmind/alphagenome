@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.data import gene_annotation
-from alphagenome.data import genome
 import numpy as np
 import pandas as pd
+from absl.testing import absltest, parameterized
+
+from alphagenome.data import gene_annotation, genome
 
 
 class ExtractTSSTest(absltest.TestCase):

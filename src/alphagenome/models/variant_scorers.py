@@ -14,18 +14,19 @@
 
 """Module containing variant scorer dataclasses for variant scoring."""
 
-from collections.abc import Sequence
 import dataclasses
 import enum
 import itertools
 import math
+from collections.abc import Sequence
 from typing import TypeVar
 
-from alphagenome.models import dna_output
-from alphagenome.protos import dna_model_pb2
 import anndata
 import immutabledict
 import pandas as pd
+
+from alphagenome.models import dna_output
+from alphagenome.protos import dna_model_pb2
 
 
 class AggregationType(enum.Enum):

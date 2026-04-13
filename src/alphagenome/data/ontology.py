@@ -14,12 +14,13 @@
 
 """Handling of biological ontologies."""
 
-from collections.abc import Sequence
 import dataclasses
 import enum
+from collections.abc import Sequence
+
+import immutabledict
 
 from alphagenome.protos import dna_model_pb2
-import immutabledict
 
 
 class OntologyType(enum.IntEnum):

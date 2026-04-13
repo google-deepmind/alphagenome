@@ -15,8 +15,9 @@
 
 from collections.abc import Sequence
 
-from alphagenome.data import genome
 import numpy as np
+
+from alphagenome.data import genome
 
 
 def ism_variants(

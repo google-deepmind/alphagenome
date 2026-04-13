@@ -14,11 +14,11 @@
 
 from unittest import mock
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.protos import dna_model_pb2
-from alphagenome.data import genome
 import numpy as np
+from absl.testing import absltest, parameterized
+
+from alphagenome.data import genome
+from alphagenome.protos import dna_model_pb2
 
 
 class StrandTest(parameterized.TestCase):

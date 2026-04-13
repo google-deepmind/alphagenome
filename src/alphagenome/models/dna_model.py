@@ -15,18 +15,18 @@
 """Abstract base class for AlphaGenome DNA models."""
 
 import abc
-from collections.abc import Iterable, Sequence
 import concurrent.futures
 import enum
+from collections.abc import Iterable, Sequence
 
-from alphagenome.data import genome
-from alphagenome.data import ontology
+import anndata
+import tqdm.auto
+
+from alphagenome.data import genome, ontology
 from alphagenome.models import dna_output
 from alphagenome.models import interval_scorers as interval_scorers_lib
 from alphagenome.models import variant_scorers as variant_scorers_lib
 from alphagenome.protos import dna_model_pb2
-import anndata
-import tqdm.auto
 
 # Default maximum number of workers to use for parallel requests.
 DEFAULT_MAX_WORKERS = 5

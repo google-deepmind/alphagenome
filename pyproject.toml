@@ -134,3 +134,16 @@ unstable = true
 pyink-indentation = 2
 pyink-use-majority-quotes = true
 exclude = 'src/alphagenome/protos'
+
+[tool.ruff]
+line-length = 80
+indent-width = 2
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+# F722/F821: false positives from jaxtyping annotations
+ignore = ["E501", "E402", "E731", "E722", "E741", "E721", "E701", "F841", "F403", "F405", "F722", "F821"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

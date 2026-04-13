@@ -15,17 +15,18 @@
 """Utilities for working with genome-related objects such as intervals."""
 
 import collections
-from collections.abc import Iterable, Iterator, Mapping, Sequence
 import copy
 import dataclasses
 import enum
 import re
 import sys
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any, Protocol
 
-from alphagenome.protos import dna_model_pb2
 import numpy as np
 from typing_extensions import Self
+
+from alphagenome.protos import dna_model_pb2
 
 STRAND_POSITIVE = '+'  # Also called forward strand, 5'->3' direction.
 STRAND_NEGATIVE = '-'  # Also called negative strand, 3'->5' direction.

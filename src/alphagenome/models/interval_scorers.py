@@ -18,9 +18,10 @@ import dataclasses
 import enum
 from typing import TypeVar
 
+import immutabledict
+
 from alphagenome.models import dna_output
 from alphagenome.protos import dna_model_pb2
-import immutabledict
 
 
 class IntervalAggregationType(enum.Enum):

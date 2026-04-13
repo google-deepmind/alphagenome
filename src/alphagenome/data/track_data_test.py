@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.data import genome
-from alphagenome.data import track_data
 import jaxtyping
 import numpy as np
 import pandas as pd
+from absl.testing import absltest, parameterized
+
+from alphagenome.data import genome, track_data
 
 
 class TrackDataInitTest(parameterized.TestCase):

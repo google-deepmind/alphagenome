@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.data import genome
-from alphagenome.data import junction_data
-from alphagenome.data import track_data
-from alphagenome.data import transcript as transcript_utils
-from alphagenome.visualization import plot_components
 import matplotlib
 import numpy as np
 import pandas as pd
+from absl.testing import absltest, parameterized
 
+from alphagenome.data import genome, junction_data, track_data
+from alphagenome.data import transcript as transcript_utils
+from alphagenome.visualization import plot_components
 
 _ATAC_METADATA = pd.DataFrame(
     dict(

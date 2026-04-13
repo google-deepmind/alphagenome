@@ -13,17 +13,16 @@
 # limitations under the License.
 """Module for AlphaGenome model outputs."""
 
-from collections.abc import Callable, Iterable, Mapping
 import dataclasses
 import enum
+from collections.abc import Callable, Iterable, Mapping
 from typing import Literal
 
-from alphagenome import typing
-from alphagenome.data import junction_data
-from alphagenome.data import ontology
-from alphagenome.data import track_data
-from alphagenome.protos import dna_model_pb2
 import pandas as pd
+
+from alphagenome import typing
+from alphagenome.data import junction_data, ontology, track_data
+from alphagenome.protos import dna_model_pb2
 
 
 class OutputType(enum.Enum):

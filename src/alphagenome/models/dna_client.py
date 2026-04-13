@@ -14,34 +14,35 @@
 
 """Client implementation for interacting with a DNA model server."""
 
-from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 import concurrent.futures
 import functools
 import random
 import time
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from typing import TypeVar
 
-from alphagenome import tensor_utils
-from alphagenome.data import genome
-from alphagenome.data import junction_data
-from alphagenome.data import ontology
-from alphagenome.data import track_data
-from alphagenome.models import dna_model
-from alphagenome.models import dna_output
-from alphagenome.models import interval_scorers as interval_scorers_lib
-from alphagenome.models import junction_data_utils
-from alphagenome.models import track_data_utils
-from alphagenome.models import variant_scorers as variant_scorers_lib
-from alphagenome.protos import dna_model_pb2
-from alphagenome.protos import dna_model_service_pb2
-from alphagenome.protos import dna_model_service_pb2_grpc
-from alphagenome.protos import tensor_pb2
 import anndata
 import grpc
 import numpy as np
 import pandas as pd
 import tqdm.auto
 
+from alphagenome import tensor_utils
+from alphagenome.data import genome, junction_data, ontology, track_data
+from alphagenome.models import (
+  dna_model,
+  dna_output,
+  junction_data_utils,
+  track_data_utils,
+)
+from alphagenome.models import interval_scorers as interval_scorers_lib
+from alphagenome.models import variant_scorers as variant_scorers_lib
+from alphagenome.protos import (
+  dna_model_pb2,
+  dna_model_service_pb2,
+  dna_model_service_pb2_grpc,
+  tensor_pb2,
+)
 
 # Supported DNA sequence lengths.
 SEQUENCE_LENGTH_16KB = 2**14  # 16_384

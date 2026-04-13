@@ -15,16 +15,16 @@
 
 from unittest import mock
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.data import genome
-from alphagenome.data import transcript as transcript_utils
-from alphagenome.visualization import plot_transcripts
 import matplotlib
 import matplotlib.axes
 import matplotlib.path
 import matplotlib.pyplot as plt
 import matplotlib.transforms
+from absl.testing import absltest, parameterized
+
+from alphagenome.data import genome
+from alphagenome.data import transcript as transcript_utils
+from alphagenome.visualization import plot_transcripts
 
 
 def _make_transcript(

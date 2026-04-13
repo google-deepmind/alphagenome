@@ -17,8 +17,8 @@ import sys
 from unittest import mock
 
 from absl.testing import absltest
-from alphagenome import colab_utils
 
+from alphagenome import colab_utils
 
 _TEST_SECRET_KEY = '_TEST_ALPHAGENOME_API_KEY'
 

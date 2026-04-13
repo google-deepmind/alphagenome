@@ -14,12 +14,13 @@
 
 """Utilities for working with gene annotations (e.g., GTFs)."""
 
-from collections.abc import Sequence
 import enum
+from collections.abc import Sequence
 
-from alphagenome.data import genome
 import numpy as np
 import pandas as pd
+
+from alphagenome.data import genome
 
 
 @enum.unique

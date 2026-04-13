@@ -18,11 +18,12 @@ import functools
 import itertools
 import tracemalloc
 
-from absl import flags
-from alphagenome import tensor_utils
-from alphagenome.protos import tensor_pb2
 import google_benchmark
 import numpy as np
+from absl import flags
+
+from alphagenome import tensor_utils
+from alphagenome.protos import tensor_pb2
 
 _MB_TO_BYTES = 2**20
 

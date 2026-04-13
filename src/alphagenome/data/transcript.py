@@ -21,9 +21,9 @@ import functools
 import sys
 from typing import Any
 
-from alphagenome.data import genome
 import pandas as pd
 
+from alphagenome.data import genome
 
 MITOCHONDRIAL_CHROMS = ['M', 'chrM', 'MT']
 

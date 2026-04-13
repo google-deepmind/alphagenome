@@ -14,18 +14,19 @@
 
 """Plotting functions."""
 
-from collections.abc import Callable, Mapping, Sequence
 import functools
 import math
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
-from absl import logging
-from alphagenome.data import genome
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from absl import logging
+
+from alphagenome.data import genome
 
 
 @functools.lru_cache(maxsize=8)

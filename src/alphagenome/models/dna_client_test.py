@@ -14,31 +14,33 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 import dataclasses
 import functools
 import time
+from collections.abc import Sequence
 from unittest import mock
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome import tensor_utils
-from alphagenome.data import genome
-from alphagenome.data import junction_data
-from alphagenome.data import track_data
-from alphagenome.interpretation import ism
-from alphagenome.models import dna_client
-from alphagenome.models import interval_scorers
-from alphagenome.models import junction_data_utils
-from alphagenome.models import track_data_utils
-from alphagenome.models import variant_scorers
-from alphagenome.protos import dna_model_pb2
-from alphagenome.protos import dna_model_service_pb2
-from alphagenome.protos import dna_model_service_pb2_grpc
 import anndata
 import grpc
 import numpy as np
 import pandas as pd
+from absl.testing import absltest, parameterized
+
+from alphagenome import tensor_utils
+from alphagenome.data import genome, junction_data, track_data
+from alphagenome.interpretation import ism
+from alphagenome.models import (
+  dna_client,
+  interval_scorers,
+  junction_data_utils,
+  track_data_utils,
+  variant_scorers,
+)
+from alphagenome.protos import (
+  dna_model_pb2,
+  dna_model_service_pb2,
+  dna_model_service_pb2_grpc,
+)
 
 
 class _FakeRpcError(grpc.RpcError):

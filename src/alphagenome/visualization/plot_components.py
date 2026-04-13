@@ -27,18 +27,16 @@ Three main elements are:
 import abc
 from collections.abc import Mapping, Sequence
 
-from alphagenome.data import genome
-from alphagenome.data import junction_data
-from alphagenome.data import track_data
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+from jaxtyping import Float32  # pylint: disable=g-importing-member
+from matplotlib import colors as plt_colors
+
+from alphagenome.data import genome, junction_data, track_data
 from alphagenome.data import transcript as transcript_utils
 from alphagenome.visualization import plot as plot_lib
 from alphagenome.visualization import plot_transcripts
-from jaxtyping import Float32  # pylint: disable=g-importing-member
-import matplotlib
-from matplotlib import colors as plt_colors
-import matplotlib.pyplot as plt
-import numpy as np
-
 
 # String, RGB or RGBA color.
 _ColorType = (

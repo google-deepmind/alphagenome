@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.data import genome
-from alphagenome.data import junction_data
-from alphagenome.models import junction_data_utils
 import numpy as np
 import pandas as pd
+from absl.testing import absltest, parameterized
+
+from alphagenome.data import genome, junction_data
+from alphagenome.models import junction_data_utils
 
 
 class JunctionDataUtilsTest(parameterized.TestCase):

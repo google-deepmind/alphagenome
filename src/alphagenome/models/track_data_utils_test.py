@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome import tensor_utils
-from alphagenome.data import genome
-from alphagenome.data import track_data
-from alphagenome.protos import dna_model_pb2
-from alphagenome.models import track_data_utils
 import ml_dtypes
 import numpy as np
 import pandas as pd
+from absl.testing import absltest, parameterized
+
+from alphagenome import tensor_utils
+from alphagenome.data import genome, track_data
+from alphagenome.models import track_data_utils
+from alphagenome.protos import dna_model_pb2
 
 
 class TrackDataUtilsTest(parameterized.TestCase):

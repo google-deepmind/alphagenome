@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from alphagenome.models import dna_output
-from alphagenome.models import interval_scorers
+from absl.testing import absltest, parameterized
 
+from alphagenome.models import dna_output, interval_scorers
 from alphagenome.protos import dna_model_pb2
 
 

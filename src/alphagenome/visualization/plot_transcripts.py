@@ -14,18 +14,19 @@
 
 """Visualize transcripts/gene annotation in matplotlib."""
 
-from collections.abc import Sequence
 import dataclasses
 import enum
+from collections.abc import Sequence
 from typing import Any
 
-from alphagenome.data import genome
-from alphagenome.data import transcript as transcript_utils
 import intervaltree
 import matplotlib as mpl
 import matplotlib.figure
 import matplotlib.path
 import matplotlib.pyplot as plt
+
+from alphagenome.data import genome
+from alphagenome.data import transcript as transcript_utils
 
 
 @dataclasses.dataclass

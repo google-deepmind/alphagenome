@@ -17,13 +17,11 @@
 
 from collections.abc import Iterable, Sequence
 
-from alphagenome import tensor_utils
-from alphagenome.data import genome
-from alphagenome.data import ontology
-from alphagenome.data import track_data
-from alphagenome.protos import dna_model_pb2
-from alphagenome.protos import tensor_pb2
 import pandas as pd
+
+from alphagenome import tensor_utils
+from alphagenome.data import genome, ontology, track_data
+from alphagenome.protos import dna_model_pb2, tensor_pb2
 
 
 def to_protos(
