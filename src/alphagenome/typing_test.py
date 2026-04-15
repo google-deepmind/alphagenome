@@ -19,7 +19,7 @@ import jaxtyping
 import numpy as np
 from absl.testing import absltest, parameterized
 from jaxtyping import (
-  Float32,  # pylint: disable=g-multiple-import, g-importing-member
+    Float32,  # pylint: disable=g-multiple-import, g-importing-member
 )
 
 from alphagenome import typing

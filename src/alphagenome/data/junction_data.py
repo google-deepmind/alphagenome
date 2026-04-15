@@ -24,8 +24,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from jaxtyping import (  # pylint: disable=g-multiple-import, g-importing-member
-  Float,
-  Shaped,
+    Float,
+    Shaped,
 )
 
 from alphagenome import typing

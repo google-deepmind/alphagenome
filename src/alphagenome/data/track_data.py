@@ -24,9 +24,9 @@ from typing import Any, Union
 import numpy as np
 import pandas as pd
 from jaxtyping import (  # pylint: disable=g-multiple-import, g-importing-member
-  Bool,
-  Float32,
-  Int32,
+    Bool,
+    Float32,
+    Int32,
 )
 
 from alphagenome import typing

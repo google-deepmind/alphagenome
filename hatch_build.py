@@ -19,7 +19,7 @@ from typing import Any
 
 from grpc_tools import protoc
 from hatchling.builders.hooks.plugin.interface import (
-  BuildHookInterface,  # pylint: disable=g-importing-member
+    BuildHookInterface,  # pylint: disable=g-importing-member
 )
 
 _ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src')

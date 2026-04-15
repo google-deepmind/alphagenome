@@ -30,18 +30,18 @@ import tqdm.auto
 from alphagenome import tensor_utils
 from alphagenome.data import genome, junction_data, ontology, track_data
 from alphagenome.models import (
-  dna_model,
-  dna_output,
-  junction_data_utils,
-  track_data_utils,
+    dna_model,
+    dna_output,
+    junction_data_utils,
+    track_data_utils,
 )
 from alphagenome.models import interval_scorers as interval_scorers_lib
 from alphagenome.models import variant_scorers as variant_scorers_lib
 from alphagenome.protos import (
-  dna_model_pb2,
-  dna_model_service_pb2,
-  dna_model_service_pb2_grpc,
-  tensor_pb2,
+    dna_model_pb2,
+    dna_model_service_pb2,
+    dna_model_service_pb2_grpc,
+    tensor_pb2,
 )
 
 # Supported DNA sequence lengths.

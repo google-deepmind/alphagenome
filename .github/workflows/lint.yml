@@ -11,6 +11,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv python install 3.10
-      - run: uv pip install ruff
-      - run: uv run ruff check .
+      - run: uvx ruff check .

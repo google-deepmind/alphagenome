@@ -30,16 +30,16 @@ from alphagenome import tensor_utils
 from alphagenome.data import genome, junction_data, track_data
 from alphagenome.interpretation import ism
 from alphagenome.models import (
-  dna_client,
-  interval_scorers,
-  junction_data_utils,
-  track_data_utils,
-  variant_scorers,
+    dna_client,
+    interval_scorers,
+    junction_data_utils,
+    track_data_utils,
+    variant_scorers,
 )
 from alphagenome.protos import (
-  dna_model_pb2,
-  dna_model_service_pb2,
-  dna_model_service_pb2_grpc,
+    dna_model_pb2,
+    dna_model_service_pb2,
+    dna_model_service_pb2_grpc,
 )
 
 
