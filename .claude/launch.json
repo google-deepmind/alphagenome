@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Docker All Services",
+      "runtimeExecutable": "./alphagenome-docker.sh",
+      "runtimeArgs": ["start"],
+      "port": 8889
+    },
+    {
+      "name": "Jupyter Lab (Docker)",
+      "runtimeExecutable": "./alphagenome-docker.sh",
+      "runtimeArgs": ["jupyter"],
+      "port": 8889
+    }
+  ]
+}

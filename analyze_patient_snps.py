@@ -33,46 +33,76 @@ def fetch_snp_info(snp_id: str) -> Optional[Dict]:
   """
   # MyVariant.info provides a cleaner API than raw NCBI
   url = f'https://myvariant.info/v1/variant/{snp_id}'
-  params = {'fields': 'dbsnp.rsid,dbsnp.gene,dbsnp.chrom,dbsnp.hg38'}
   
   try:
-    response = requests.get(url, params=params, timeout=10)
+    response = requests.get(url, timeout=10)
     response.raise_for_status()
     data = response.json()
     
-    if 'dbsnp' not in data:
-      print(f'  No dbSNP data found for {snp_id}')
+    # Check if variant was found
+    if 'error' in data or '_id' not in data:
+      print(f'  No variant data found for {snp_id}')
       return None
     
-    dbsnp = data['dbsnp']
+    # Try to get hg38 coordinates (preferred)
+    position = None
+    chromosome = None
     
-    # Get hg38 coordinates
-    if 'hg38' not in dbsnp:
-      print(f'  No hg38 coordinates for {snp_id}')
+    if 'hg38' in data:
+      position = data['hg38'].get('start')
+      chromosome = data['hg38'].get('chrom', data.get('chrom'))
+    elif 'chrom' in data and 'hg19' in data:
+      # Fall back to hg19 if hg38 not available
+      print(f'  WARNING: Using hg19 coordinates for {snp_id} - may need manual hg38 conversion')
+      position = data['hg19'].get('start')
+      chromosome = data.get('chrom')
+    elif 'chrom' in data and any(coord in data for coord in ['start', 'pos']):
+      # Use whatever coordinates are available
+      position = data.get('start') or data.get('pos')
+      chromosome = data.get('chrom')
+    else:
+      print(f'  No genomic coordinates found for {snp_id}')
       return None
     
-    hg38 = dbsnp['hg38']
-    chromosome = hg38.get('start_chrom', hg38.get('chrom'))
-    position = hg38.get('start')
+    if not position or not chromosome:
+      print(f'  Incomplete coordinate information for {snp_id}')
+      return None
     
-    # Get alleles - this can be complex for multi-allelic sites
-    ref = dbsnp.get('ref')
-    alt = dbsnp.get('alt')
+    # Get alleles from VCF fields or dbsnp
+    ref = data.get('ref')
+    alt = data.get('alt')
     
-    # Get gene information if available
-    gene_info = dbsnp.get('gene', {})
-    gene_name = gene_info.get('symbol', 'Unknown') if isinstance(gene_info, dict) else 'Unknown'
+    # If not in main data, try dbsnp section
+    if not ref or not alt:
+      if 'dbsnp' in data:
+        dbsnp = data['dbsnp']
+        ref = ref or dbsnp.get('ref')
+        alt = alt or dbsnp.get('alt')
+    
+    if not ref or not alt:
+      print(f'  No allele information found for {snp_id}')
+      return None
+    
+    # Get gene information
+    gene_name = 'Unknown'
+    if 'dbsnp' in data and 'gene' in data['dbsnp']:
+      gene_info = data['dbsnp']['gene']
+      if isinstance(gene_info, list) and gene_info:
+        # Take the first gene if multiple
+        gene_name = gene_info[0].get('symbol', 'Unknown')
+      elif isinstance(gene_info, dict):
+        gene_name = gene_info.get('symbol', 'Unknown')
     
     # Ensure chromosome has 'chr' prefix
-    if not chromosome.startswith('chr'):
+    if not str(chromosome).startswith('chr'):
       chromosome = f'chr{chromosome}'
     
     return {
         'snp_id': snp_id,
         'chromosome': chromosome,
-        'position': int(position),  # Convert to 1-based position
-        'reference': ref,
-        'alternate': alt,
+        'position': int(position),  # Should be 1-based already
+        'reference': str(ref).upper(),
+        'alternate': str(alt).upper(),
         'gene': gene_name,
     }
     
@@ -181,22 +211,38 @@ def analyze_snp_with_alphagenome(
   
   # Score variant
   try:
-    scores_df = model.score_variants(
-        interval=interval,
+    scores = model.score_variants(
+        intervals=[interval],
         variants=[variant],
         variant_scorers=scorers,
-        ontology_terms=tissues,
+        organism=dna_client.Organism.HOMO_SAPIENS,
     )
     
+    # Convert AnnData results to DataFrame for easier handling
+    import pandas as pd
+    
+    # scores is a list of lists of AnnData objects
+    # For simplicity, let's just return the raw scores for now
     return {
         'variant': str(variant),
         'interval': str(interval),
-        'scores': scores_df,
+        'scores': scores,  # This will be a list of AnnData objects
         'tissues': tissues,
     }
   except Exception as e:
     print(f'  Error scoring variant: {str(e)}')
     return None
+
+
+def get_manual_snp_coordinates():
+  """Manual SNP coordinate lookup for SNPs not found in MyVariant.info."""
+  # If you have known coordinates for missing SNPs, add them here
+  # Format: {snp_id: {'chromosome': 'chr1', 'position': 12345, 'reference': 'A', 'alternate': 'T', 'gene': 'GENE1'}}
+  manual_coords = {
+      # Add any known SNP coordinates here if needed
+      # 'rs2214565': {'chromosome': 'chr1', 'position': 12345, 'reference': 'A', 'alternate': 'T', 'gene': 'Unknown'}
+  }
+  return manual_coords
 
 
 def main():
@@ -244,12 +290,16 @@ def main():
   
   # ===================================
   
-  # Get API key from environment
-  api_key = os.getenv('ALPHAGENOME_API_KEY')
+  # Get API key from environment variable
+  api_key = os.getenv('ALPHAGENOME_API_KEY') or os.getenv('ALPHA_GENOME_API_KEY')
   if not api_key:
-    print('ERROR: Please set ALPHAGENOME_API_KEY environment variable')
-    print('Export your API key: export ALPHAGENOME_API_KEY="your_key_here"')
-    return
+    raise ValueError("ALPHAGENOME_API_KEY environment variable is not set. Please set it with your valid API key.")
+  
+  # Validate API key format (should not contain placeholder text)
+  if '{{' in api_key or '}}' in api_key or api_key == 'YOUR_API_KEY':
+    raise ValueError("API key appears to be a placeholder. Please set ALPHAGENOME_API_KEY with your actual API key.")
+  
+  print(f'Using API key: {api_key[:10]}... (length: {len(api_key)})')
   
   print('='*80)
   print('AlphaGenome Patient SNP Analysis')
@@ -264,9 +314,19 @@ def main():
   # Step 1: Fetch SNP information
   print('Step 1: Fetching SNP genomic coordinates...')
   snp_info_list = []
+  manual_coords = get_manual_snp_coordinates()
+  
   for snp_id in patient_snps:
     print(f'  Fetching {snp_id}...')
     info = fetch_snp_info(snp_id)
+    
+    # If not found in API, check manual coordinates
+    if not info and snp_id in manual_coords:
+      manual_info = manual_coords[snp_id].copy()
+      manual_info['snp_id'] = snp_id
+      info = manual_info
+      print(f'  Using manual coordinates for {snp_id}')
+    
     if info:
       snp_info_list.append(info)
       print(f'    → {info["chromosome"]}:{info["position"]} {info["reference"]}>{info["alternate"]} (Gene: {info["gene"]})')
@@ -316,12 +376,15 @@ def main():
   
   for result in results:
     snp_info = result['snp_info']
-    scores_df = result['alphagenome_result']['scores']
+    scores = result['alphagenome_result']['scores']
     
     print(f"\n{snp_info['snp_id']} - {snp_info['gene']} ({snp_info['chromosome']}:{snp_info['position']})")
     print(f"  Reference: {snp_info['reference']} → Alternate: {snp_info['alternate']}")
-    print(f'\n  AlphaGenome Scores:')
-    print(scores_df.to_string(index=False))
+    print(f'\n  AlphaGenome Scores (AnnData objects): {len(scores[0])} scorers')
+    
+    # Print summary of each scorer result
+    for i, anndata_obj in enumerate(scores[0]):
+      print(f"    Scorer {i+1}: shape {anndata_obj.X.shape}, {anndata_obj.uns.get('variant_scorer', 'Unknown scorer')}")
     print('\n' + '-'*80)
   
   # Save results to file
@@ -331,6 +394,16 @@ def main():
   # Convert to serializable format
   serializable_results = []
   for result in results:
+    # Convert AnnData objects to summary info
+    scores_summary = []
+    for anndata_obj in result['alphagenome_result']['scores'][0]:
+      scores_summary.append({
+          'scorer': str(anndata_obj.uns.get('variant_scorer', 'Unknown')),
+          'shape': anndata_obj.X.shape,
+          'mean_score': float(anndata_obj.X.mean()) if anndata_obj.X.size > 0 else 0.0,
+          'tissue_tracks': anndata_obj.var.get('name', []).tolist() if hasattr(anndata_obj.var, 'name') else [],
+      })
+    
     serializable_results.append({
         'snp_id': result['snp_info']['snp_id'],
         'gene': result['snp_info']['gene'],
@@ -338,7 +411,7 @@ def main():
         'position': result['snp_info']['position'],
         'reference': result['snp_info']['reference'],
         'alternate': result['snp_info']['alternate'],
-        'scores': result['alphagenome_result']['scores'].to_dict('records'),
+        'scores': scores_summary,
     })
   
   with open(output_file, 'w') as f:

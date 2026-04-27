@@ -1,0 +1,145 @@
+SNP2GENE MAPPING ANALYSIS REPORT
+================================
+Analysis Date: 2025-12-03 14:01:46
+
+MAPPING SUMMARY
+===============
+Total SNP-Gene associations: 4163
+Unique SNPs mapped: 3891
+Unique genes identified: 363
+Data sources used: NCBI_eUtils, Fallback
+
+CHROMOSOME DISTRIBUTION
+=======================
+Chromosome 1: 457 SNP-gene associations
+Chromosome 10: 33 SNP-gene associations
+Chromosome 11: 266 SNP-gene associations
+Chromosome 12: 129 SNP-gene associations
+Chromosome 13: 199 SNP-gene associations
+Chromosome 14: 19 SNP-gene associations
+Chromosome 15: 40 SNP-gene associations
+Chromosome 16: 66 SNP-gene associations
+Chromosome 17: 364 SNP-gene associations
+Chromosome 18: 59 SNP-gene associations
+
+
+GENE FREQUENCY ANALYSIS
+=======================
+Top 20 genes with most SNP associations:
+ESRRG: 281 SNPs
+PRKCE: 225 SNPs
+MARCHF1: 166 SNPs
+KLF12: 150 SNPs
+NR3C1: 129 SNPs
+NFIB: 123 SNPs
+ESR1: 114 SNPs
+POU6F2: 110 SNPs
+ZBTB16: 97 SNPs
+BACH2: 95 SNPs
+NR3C2: 90 SNPs
+RARB: 82 SNPs
+TP63: 79 SNPs
+PPARA: 68 SNPs
+CUX1: 65 SNPs
+AGPAT4: 52 SNPs
+FLI1: 50 SNPs
+KLHL32: 46 SNPs
+SERINC5: 42 SNPs
+ACACB: 40 SNPs
+
+
+GENE-PATIENT MATRIX STATISTICS
+==============================
+Genes in patient matrix: 363
+Patients analyzed: 14
+Missing data percentage: 0.00%
+
+HIGH-IMPACT GENES (>10 SNPs)
+=============================
+ESRRG: 281 SNPs - High priority for functional analysis
+PRKCE: 225 SNPs - High priority for functional analysis
+MARCHF1: 166 SNPs - High priority for functional analysis
+KLF12: 150 SNPs - High priority for functional analysis
+NR3C1: 129 SNPs - High priority for functional analysis
+NFIB: 123 SNPs - High priority for functional analysis
+ESR1: 114 SNPs - High priority for functional analysis
+POU6F2: 110 SNPs - High priority for functional analysis
+ZBTB16: 97 SNPs - High priority for functional analysis
+BACH2: 95 SNPs - High priority for functional analysis
+NR3C2: 90 SNPs - High priority for functional analysis
+RARB: 82 SNPs - High priority for functional analysis
+TP63: 79 SNPs - High priority for functional analysis
+PPARA: 68 SNPs - High priority for functional analysis
+CUX1: 65 SNPs - High priority for functional analysis
+AGPAT4: 52 SNPs - High priority for functional analysis
+FLI1: 50 SNPs - High priority for functional analysis
+KLHL32: 46 SNPs - High priority for functional analysis
+SERINC5: 42 SNPs - High priority for functional analysis
+ACACB: 40 SNPs - High priority for functional analysis
+CREB3L2: 39 SNPs - High priority for functional analysis
+KLF7: 33 SNPs - High priority for functional analysis
+RNF216: 33 SNPs - High priority for functional analysis
+ARNTL: 33 SNPs - High priority for functional analysis
+SRBD1: 32 SNPs - High priority for functional analysis
+ETV1: 31 SNPs - High priority for functional analysis
+BMP7: 31 SNPs - High priority for functional analysis
+SP4: 30 SNPs - High priority for functional analysis
+EHF: 30 SNPs - High priority for functional analysis
+PAX3: 29 SNPs - High priority for functional analysis
+WHRN: 29 SNPs - High priority for functional analysis
+RXRA: 28 SNPs - High priority for functional analysis
+SMAD6: 27 SNPs - High priority for functional analysis
+MITF: 26 SNPs - High priority for functional analysis
+SMAD9: 25 SNPs - High priority for functional analysis
+E2F3: 24 SNPs - High priority for functional analysis
+GIGYF2: 24 SNPs - High priority for functional analysis
+NCOA3: 22 SNPs - High priority for functional analysis
+SH3TC2: 22 SNPs - High priority for functional analysis
+MTARC1: 22 SNPs - High priority for functional analysis
+ZC3HAV1: 21 SNPs - High priority for functional analysis
+NFIC: 20 SNPs - High priority for functional analysis
+GIT2: 20 SNPs - High priority for functional analysis
+ELK3: 18 SNPs - High priority for functional analysis
+MBOAT2: 18 SNPs - High priority for functional analysis
+BPTF: 18 SNPs - High priority for functional analysis
+NEK7: 17 SNPs - High priority for functional analysis
+PEMT: 17 SNPs - High priority for functional analysis
+SMAD2: 17 SNPs - High priority for functional analysis
+FA2H: 17 SNPs - High priority for functional analysis
+FOXO3: 16 SNPs - High priority for functional analysis
+TGIF1: 16 SNPs - High priority for functional analysis
+MPRIP: 16 SNPs - High priority for functional analysis
+PAX8: 16 SNPs - High priority for functional analysis
+FOXJ3: 15 SNPs - High priority for functional analysis
+EFEMP1: 15 SNPs - High priority for functional analysis
+PIGL: 15 SNPs - High priority for functional analysis
+RAI1: 14 SNPs - High priority for functional analysis
+MXI1: 14 SNPs - High priority for functional analysis
+TOM1L2: 14 SNPs - High priority for functional analysis
+SMAD7: 14 SNPs - High priority for functional analysis
+TFEC: 13 SNPs - High priority for functional analysis
+GALNS: 13 SNPs - High priority for functional analysis
+PRPSAP2: 13 SNPs - High priority for functional analysis
+ZNF148: 12 SNPs - High priority for functional analysis
+NCOA1: 12 SNPs - High priority for functional analysis
+AGT: 12 SNPs - High priority for functional analysis
+MYO15A: 12 SNPs - High priority for functional analysis
+PAX8-AS1: 11 SNPs - High priority for functional analysis
+LOC124904512: 11 SNPs - High priority for functional analysis
+ELF1: 11 SNPs - High priority for functional analysis
+FOXN2: 11 SNPs - High priority for functional analysis
+CREM: 11 SNPs - High priority for functional analysis
+SAMD4B: 11 SNPs - High priority for functional analysis
+IP6K3: 11 SNPs - High priority for functional analysis
+NCOR1: 11 SNPs - High priority for functional analysis
+
+
+RECOMMENDATIONS
+===============
+1. Focus functional analysis on high-impact genes (76 genes with >10 SNPs)
+2. Investigate intergenic regions (1 SNPs) for regulatory elements
+3. Consider gene-based association testing for improved statistical power
+4. Integrate with pathway databases for biological interpretation
+5. Validate gene assignments using functional annotation tools
+
+Analysis completed successfully.

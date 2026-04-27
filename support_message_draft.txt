@@ -1,0 +1,51 @@
+Subject: API Key Authentication Issue - "API key not valid" Error
+
+Hello AlphaGenome Team,
+
+I'm experiencing an API authentication issue and would appreciate your assistance.
+
+## Problem Description
+I've obtained an API key from the AlphaGenome portal, but when attempting to make API calls, I receive the error:
+```
+status = StatusCode.INVALID_ARGUMENT
+details = "API key not valid. Please pass a valid API key."
+```
+
+## Environment & Setup
+- Platform: macOS
+- Python SDK: alphagenome (latest version from GitHub)
+- API Key format: 39 characters starting with "AlzaSy..."
+- Environment variable: ALPHA_GENOME_API_KEY is properly set
+
+## What I've Tested
+✅ Network connectivity to gdmscience.googleapis.com:443 - SUCCESS
+✅ gRPC channel creation - SUCCESS
+✅ Client object creation (dna_client.create) - SUCCESS
+❌ API calls (model.output_metadata()) - FAIL with "API key not valid"
+
+## Code Used for Testing
+```python
+from alphagenome.models import dna_client
+import os
+
+api_key = os.getenv('ALPHA_GENOME_API_KEY')
+model = dna_client.create(api_key)  # This works
+metadata = model.output_metadata()  # This fails
+```
+
+## Questions
+1. Is there an activation period after API key generation?
+2. Are there additional verification steps required?
+3. Do I need to enable specific permissions or accept additional terms?
+4. Is there a way to verify API key status in the portal?
+
+## Use Case
+I'm planning to analyze a small set of patient SNPs (5 variants) for research purposes, well within the non-commercial usage guidelines.
+
+Thank you for your time and assistance. I'm excited to start using AlphaGenome for genomic analysis!
+
+Best regards,
+[Your Name]
+
+---
+Note: I can provide additional debugging information if needed, but wanted to avoid including sensitive details in this initial message.
