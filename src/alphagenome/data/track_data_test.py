@@ -156,11 +156,11 @@ class TrackDataSlicingTest(parameterized.TestCase):
       self.assertEqual(tdata2.interval.end, 2)
       self.assertEqual(tdata2.width, tdata2.interval.width)
       self.assertEqual(tdata2.width, 2)
-      # Fails because (end - start) is not evenly divisible by resolution.
+      # Fails because slice endpoints do not align with the reference bins.
       with self.assertRaises(ValueError):
         tdata.slice_by_positions(0, 3)
       with self.assertRaises(ValueError):
-        tdata.slice_by_positions(0, 1)
+        tdata.slice_by_positions(1, 3)
     # Fails because there are no positional axes to slice into.
     else:
       self.assertEqual(tdata.width, 0)
@@ -204,15 +204,15 @@ class TrackDataSlicingTest(parameterized.TestCase):
       self.assertEqual(tdata2.interval.end, 3)
       self.assertEqual(tdata2.width, tdata2.interval.width)
       self.assertEqual(tdata2.width, 2)
-      # Fails because (end - start) is not evenly divisible by resolution.
+      # Fails because slice endpoints do not align with the reference bins.
       with self.assertRaises(ValueError):
         tdata.slice_by_interval(genome.Interval('chr1', 1, 4))
       with self.assertRaises(ValueError):
-        tdata.slice_by_interval(genome.Interval('chr1', 1, 2))
+        tdata.slice_by_interval(genome.Interval('chr1', 2, 4))
 
       # Same would work if we set match_resolution=True.
       tdata2 = tdata.slice_by_interval(
-          genome.Interval('chr1', 1, 4), match_resolution=True
+          genome.Interval('chr1', 2, 4), match_resolution=True
       )
       self.assertIsNotNone(tdata2.interval)
       self.assertEqual(tdata2.interval.start, 1)
@@ -695,19 +695,30 @@ class TrackDataGetItemTest(parameterized.TestCase):
         values, metadata, resolution=1, interval=interval
     )
 
-  @parameterized.parameters([
-      dict(num_positional=1),
-      dict(num_positional=2),
-  ])
-  def test_getitem_positional_slice(self, num_positional: int):
+  @parameterized.product(
+      num_positional=[1, 2],
+      slice_case=[
+          (slice(1, 3), 1, 3),
+          (slice(None, 3), 0, 3),
+          (slice(1, None), 1, 4),
+          (slice(None, 0), 0, 0),
+          (slice(4, None), 4, 4),
+          (slice(None), 0, 4),
+      ],
+  )
+  def test_getitem_positional_slice(self, num_positional: int, slice_case):
     tdata = self._get_test_data(num_positional)
-    sliced_tdata = tdata[1:3]
-    self.assertEqual(sliced_tdata.width, 2)
-    expected_shape = tuple([2] * num_positional + [5])
+    position_slice, start, end = slice_case
+    sliced_tdata = tdata[position_slice]
+    self.assertEqual(sliced_tdata.width, end - start)
+    expected_shape = tuple([end - start] * num_positional + [5])
     assert sliced_tdata.interval is not None
     self.assertEqual(sliced_tdata.values.shape, expected_shape)
-    self.assertEqual(sliced_tdata.interval.start, 11)
-    self.assertEqual(sliced_tdata.interval.end, 13)
+    self.assertEqual(sliced_tdata.interval.start, 10 + start)
+    self.assertEqual(sliced_tdata.interval.end, 10 + end)
+    np.testing.assert_array_equal(
+        sliced_tdata.values, tdata.values[(position_slice,) * num_positional]
+    )
 
     with self.assertRaises(IndexError):
       _ = tdata[1:3:2]
