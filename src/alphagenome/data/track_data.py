@@ -233,8 +233,8 @@ class TrackData:
       A new `TrackData` object with the sliced values.
 
     Raises:
-      ValueError: If (end - start) is greater than the width, or if (end -
-      start) is not divisible by the resolution.
+      ValueError: If (end - start) is greater than the width, or if either
+        start or end is not divisible by the resolution
     """
     if (end - start) > self.width:
       raise ValueError(
