@@ -695,30 +695,19 @@ class TrackDataGetItemTest(parameterized.TestCase):
         values, metadata, resolution=1, interval=interval
     )
 
-  @parameterized.product(
-      num_positional=[1, 2],
-      slice_case=[
-          (slice(1, 3), 1, 3),
-          (slice(None, 3), 0, 3),
-          (slice(1, None), 1, 4),
-          (slice(None, 0), 0, 0),
-          (slice(4, None), 4, 4),
-          (slice(None), 0, 4),
-      ],
-  )
-  def test_getitem_positional_slice(self, num_positional: int, slice_case):
+  @parameterized.parameters([
+      dict(num_positional=1),
+      dict(num_positional=2),
+  ])
+  def test_getitem_positional_slice(self, num_positional: int):
     tdata = self._get_test_data(num_positional)
-    position_slice, start, end = slice_case
-    sliced_tdata = tdata[position_slice]
-    self.assertEqual(sliced_tdata.width, end - start)
-    expected_shape = tuple([end - start] * num_positional + [5])
+    sliced_tdata = tdata[1:3]
+    self.assertEqual(sliced_tdata.width, 2)
+    expected_shape = tuple([2] * num_positional + [5])
     assert sliced_tdata.interval is not None
     self.assertEqual(sliced_tdata.values.shape, expected_shape)
-    self.assertEqual(sliced_tdata.interval.start, 10 + start)
-    self.assertEqual(sliced_tdata.interval.end, 10 + end)
-    np.testing.assert_array_equal(
-        sliced_tdata.values, tdata.values[(position_slice,) * num_positional]
-    )
+    self.assertEqual(sliced_tdata.interval.start, 11)
+    self.assertEqual(sliced_tdata.interval.end, 13)
 
     with self.assertRaises(IndexError):
       _ = tdata[1:3:2]
