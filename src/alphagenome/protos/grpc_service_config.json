@@ -1,0 +1,23 @@
+{
+  "methodConfig": [
+    {
+      "name": [
+        {
+          "service": "google.gdm.gdmscience.alphagenome.atlas.v1main.AtlasService"
+        }
+      ],
+      "timeout": "60s",
+      "retryPolicy": {
+        "maxAttempts": 5,
+        "initialBackoff": "1s",
+        "maxBackoff": "60s",
+        "backoffMultiplier": 2,
+        "retryableStatusCodes": [
+          "RESOURCE_EXHAUSTED",
+          "UNAVAILABLE",
+          "DEADLINE_EXCEEDED"
+        ]
+      }
+    }
+  ]
+}

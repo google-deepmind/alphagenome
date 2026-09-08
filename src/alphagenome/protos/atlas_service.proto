@@ -1,0 +1,170 @@
+// Copyright 2026 Google LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package google.gdm.gdmscience.alphagenome.atlas.v1main;
+
+import "alphagenome/protos/dna_model.proto";
+
+option go_package = "cloud.google.com/go/gdm/gdmscience/alphagenome/atlas/apiv1main/atlaspb;atlaspb";
+option java_multiple_files = true;
+option java_outer_classname = "AtlasServiceProto";
+option java_package = "com.google.gdm.gdmscience.alphagenome.atlas.v1main";
+
+// Atlas service for querying genomic data from AlphaGenome Atlas.
+service AtlasService {
+  // Lists variant scores for a given interval and organism as a dense array.
+  rpc ListDenseVariantScores(ListDenseVariantScoresRequest)
+      returns (ListDenseVariantScoresResponse) {}
+
+  // Gets variant scores for a given variant and organism as a dense array.
+  rpc GetDenseVariantScores(GetDenseVariantScoresRequest)
+      returns (DenseVariantScores) {}
+
+  // List the variant score metadata for a given organism.
+  rpc ListVariantScoresMetadata(ListVariantScoresMetadataRequest)
+      returns (ListVariantScoresMetadataResponse) {}
+}
+
+// Metadata for a single variant scorer.
+message VariantScorerInfo {
+  // Name for the variant scorer.
+  string name = 1;
+
+  // Whether the variant scorer is signed.
+  bool is_signed = 2;
+}
+
+message GeneScorersMetadata {
+  repeated google.gdm.gdmscience.alphagenome.v1main.GeneScorerMetadata
+      metadata = 1;
+}
+
+// Container for all atlas metadata.
+message Metadata {
+  oneof payload {
+    google.gdm.gdmscience.alphagenome.v1main.TracksMetadata tracks = 1;
+
+    GeneScorersMetadata gene_scorers = 2;
+  }
+}
+
+// Scores for a single variant and scorer.
+message DenseVariantScore {
+  // The variant scorer used to compute the score.
+  VariantScorerInfo variant_scorer = 1;
+
+  // Optional metadata for each dimension of the values array.
+  repeated Metadata metadata = 2;
+
+  // Shape of the scores array. The product of the shape dimensions must equal
+  // the number of values.
+  repeated int32 shape = 3;
+
+  // N-d array of scores, in row-major order. Values are stored as single
+  // precision floats.
+  bytes scores = 4;
+
+  // Optional calibrated scores for the variant. This may not be set for scores
+  // that have not been calibrated (e.g. mouse scores).
+  optional bytes calibrated_scores = 5;
+}
+
+// Dense variant scores for a single variant.
+message DenseVariantScores {
+  // The variant for which the score is computed.
+  google.gdm.gdmscience.alphagenome.v1main.Variant variant = 1;
+
+  // The interval used to calculate the variant scores.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 3;
+
+  repeated DenseVariantScore scores = 2;
+}
+
+// Metadata for a single variant scorer.
+message VariantScorerMetadata {
+  // The variant scorer used to compute the score.
+  VariantScorerInfo variant_scorer = 1;
+
+  // Fixed metadata for each variant score that is returned for this scorer.
+  repeated Metadata metadata = 2;
+}
+
+// Request message for AtlasService.ListDenseVariantScores.
+message ListDenseVariantScoresRequest {
+  // Required. The genomic interval to list variant scores for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // Required. The organism to list variant scores for.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 2;
+
+  // Optional. Requested page size. Server may return fewer variant scores than
+  // requested. If unspecified, server will pick an appropriate default.
+  int32 page_size = 3;
+
+  // Optional. A page token, received from a previous `ListDenseVariantScores`
+  // call. Provide this to retrieve the subsequent page. Please refer to
+  // https://google.aip.dev/158 for more details.
+  string page_token = 4;
+
+  // Optional. The filter to apply to the list of variant scores.
+  //
+  // Please refer to https://google.aip.dev/160 for the filter syntax.
+  //
+  // The filter is applied to the DenseVariantScores proto.
+  string filter = 5;
+}
+
+// Response message for AtlasService.ListDenseVariantScores.
+message ListDenseVariantScoresResponse {
+  // The list of dense variant scores.
+  repeated DenseVariantScores variant_scores = 1;
+
+  // A token that can be sent as `page_token` to retrieve the next page.
+  // If this field is omitted, there are no subsequent pages.
+  // Please refer to https://google.aip.dev/158 for more details.
+  string next_page_token = 2;
+
+  // The interval used to query the scores that are being returned.
+  // If the requested interval extends beyond chromosome boundaries, this
+  // reflects the valid range.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 3;
+}
+
+// Request message for AtlasService.GetDenseVariantScores.
+message GetDenseVariantScoresRequest {
+  // Required. The variant to get variant scores for.
+  google.gdm.gdmscience.alphagenome.v1main.Variant variant = 1;
+
+  // Required. The organism to get variant scores for.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 2;
+
+  // Optional. The filter to apply to the variant scores.
+  //
+  // Please refer to https://google.aip.dev/160 for the filter syntax.
+  string filter = 3;
+}
+
+// Request message for AtlasService.GetVariantScoresMetadata.
+message ListVariantScoresMetadataRequest {
+  // Required. The organism to get variant score filters for.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 1;
+}
+
+// Response message for AtlasService.GetVariantScoresMetadata.
+message ListVariantScoresMetadataResponse {
+  // The metadata for each variant scorer.
+  repeated VariantScorerMetadata variant_scorer_metadata = 1;
+}

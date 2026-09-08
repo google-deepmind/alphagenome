@@ -11,12 +11,19 @@ resolution for most outputs. AlphaGenome achieves state-of-the-art performance
 across a range of genomic prediction benchmarks, including numerous diverse
 variant effect prediction tasks (detailed in {cite:p}`alphagenome`).
 
+AlphaGenome API also provides access to the ‘Atlas’ dataset. AlphaGenome Atlas
+is a resource of pre-computed variant effect score predictions, AlphaGenome
+Variant Impact (AVI) score, and feature importances across the entire human
+genome. Learn more
+[here](https://deepmind.google.com/science/alphagenome/atlas).
+
 The API is offered as a free service for
 [non-commercial use](https://deepmind.google.com/science/alphagenome/terms).
-Query rates vary based on demand – it is well suited for smaller to medium-scale
-analyses such as analysing a limited number of genomic regions or variants
-requiring 1000s of predictions, but is likely not suitable for large scale
-analyses requiring more than 1 million predictions.
+Query rates vary based on demand – the pre-computed Atlas predictions will
+typically have a larger query rate. Other predictions are better suited for
+smaller to medium-scale analyses such as analysing a limited number of genomic
+regions or variants requiring 1000s of predictions, but is likely not suitable
+for large scale analyses requiring more than 1 million predictions.
 
 <!-- mdformat off(Turn off mdformat to retain myst syntax.) -->
 ```{figure} /_static/model_overview.png

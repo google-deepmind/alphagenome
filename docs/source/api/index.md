@@ -4,6 +4,7 @@
 :maxdepth: 1
 :hidden:
 
+atlas
 data
 models
 interpretation
@@ -14,6 +15,13 @@ visualization
 
 ::::{grid} 1 1 2 3
 :gutter: 2
+
+:::{grid-item-card} Atlas
+:link: atlas
+:link-type: doc
+
+Classes and utilities for the AlphaGenome Atlas API.
+:::
 
 :::{grid-item-card} Data
 :link: data
@@ -26,7 +34,7 @@ Classes and utilities for manipulating genomics data.
 :link: models
 :link-type: doc
 
-AlphaGenome client and variant scorers.
+Classes related to the AlphaGenome model API and variant scorers.
 :::
 
 :::{grid-item-card} Interpretation

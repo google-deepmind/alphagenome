@@ -24,6 +24,7 @@ _ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src')
 # Tuple of proto message definitions to build Python bindings for. Paths must
 # be relative to root directory.
 _ALPHAGENOME_PROTOS = (
+    'alphagenome/protos/atlas_service.proto',
     'alphagenome/protos/dna_model.proto',
     'alphagenome/protos/dna_model_service.proto',
     'alphagenome/protos/tensor.proto',

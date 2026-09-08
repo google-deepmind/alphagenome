@@ -6,7 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0]
+
+### Added
+
+-   Add AlphaGenome Atlas API for programmatic access to Atlas scores.
+
 ## [0.8.0]
+
+### Added
 
 -   Color argument to sashimi plot component.
 -   Tutorials on haplotype analysis and deriving PSI values.
