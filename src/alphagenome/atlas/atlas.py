@@ -301,6 +301,9 @@ class AtlasClient:
   ) -> Mapping[str, anndata.AnnData]:
     """Returns the scores for a single Variant within an Interval."""
 
+    if ontology_terms is not None:
+      ontology_terms = tuple(ontology_terms)
+
     filter_query = atlas_utils.build_filter(
         requested_scorers=requested_scorers,
         ontology_terms=ontology_terms,
@@ -368,6 +371,9 @@ class AtlasClient:
               ),
           )
       )
+
+    if ontology_terms is not None:
+      ontology_terms = tuple(ontology_terms)
 
     filter_query = atlas_utils.build_filter(
         requested_scorers=requested_scorers,

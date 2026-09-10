@@ -20,6 +20,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from alphagenome.atlas import atlas
 from alphagenome.data import genome
+from alphagenome.data import ontology
 from alphagenome.protos import dna_model_pb2
 from alphagenome.protos import atlas_service_pb2
 import anndata
@@ -696,6 +697,88 @@ class AtlasTest(parameterized.TestCase):
     np.testing.assert_array_equal(actual.X, expected_scores.X)
     pd.testing.assert_frame_equal(actual.obs, expected_scores.obs)
     pd.testing.assert_frame_equal(actual.var, expected_scores.var)
+
+  @parameterized.product(
+      query_method=('query_variants', 'query_interval'),
+      collection=(list, tuple, iter),
+      use_curie=(False, True),
+  )
+  def test_bulk_query_ontology_iterables(
+      self, query_method, collection, use_curie
+  ):
+    mock_stub = mock.create_autospec(atlas.AtlasServiceStubType, instance=True)
+    variant = genome.Variant.from_str('chr1:100:A>T')
+    variant_scores = atlas_service_pb2.DenseVariantScores(
+        variant=variant.to_proto(),
+        scores=[
+            atlas_service_pb2.DenseVariantScore(
+                variant_scorer=atlas_service_pb2.VariantScorerInfo(
+                    name='scorer1'
+                ),
+                shape=[1, 1],
+                scores=struct.pack('f', 2.0),
+            )
+        ],
+    )
+    mock_stub.GetDenseVariantScores.return_value = variant_scores
+    mock_stub.ListDenseVariantScores.return_value = (
+        atlas_service_pb2.ListDenseVariantScoresResponse(
+            variant_scores=[variant_scores]
+        )
+    )
+    metadata_response = atlas_service_pb2.ListVariantScoresMetadataResponse(
+        variant_scorer_metadata=[
+            atlas_service_pb2.VariantScorerMetadata(
+                variant_scorer=atlas_service_pb2.VariantScorerInfo(
+                    name='scorer1'
+                ),
+                metadata=[
+                    atlas_service_pb2.Metadata(
+                        tracks=dna_model_pb2.TracksMetadata(
+                            metadata=[
+                                dna_model_pb2.TrackMetadata(
+                                    name=f'track{i}',
+                                    strand=dna_model_pb2.STRAND_UNSTRANDED,
+                                    ontology_term=ontology.from_curie(
+                                        f'CL:{i:07d}'
+                                    ).to_proto(),
+                                )
+                                for i in (1, 2)
+                            ]
+                        )
+                    )
+                ],
+            )
+        ]
+    )
+    mock_stub.ListVariantScoresMetadata.return_value = metadata_response
+    term = 'CL:0000002' if use_curie else ontology.from_curie('CL:0000002')
+    query = getattr(atlas.AtlasClient(stub=mock_stub), query_method)
+    query_input = (
+        [variant]
+        if query_method == 'query_variants'
+        else genome.Interval.from_str('chr1:100-101')
+    )
+    result = query(
+        query_input,
+        requested_scorers=['scorer1'],
+        ontology_terms=collection([term]),
+        progress_bar=False,
+        max_workers=1,
+    )['scorer1']
+
+    np.testing.assert_array_equal(result.X, [[2.0]])
+    self.assertEqual(result.var['name'].tolist(), ['track2'])
+    self.assertEqual(result.var['ontology_curie'].tolist(), ['CL:0000002'])
+    rpc = (
+        mock_stub.GetDenseVariantScores
+        if query_method == 'query_variants'
+        else mock_stub.ListDenseVariantScores
+    )
+    self.assertIn(
+        'scores.metadata.tracks.metadata.ontology_term.id = 2',
+        rpc.call_args.args[0].filter,
+    )
 
   @parameterized.parameters(
       (grpc.StatusCode.INVALID_ARGUMENT, ValueError, 'foo'),
