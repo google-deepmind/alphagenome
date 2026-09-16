@@ -14,16 +14,15 @@ variant effect prediction tasks (detailed in {cite:p}`alphagenome`).
 AlphaGenome API also provides access to the ‘Atlas’ dataset. AlphaGenome Atlas
 is a resource of pre-computed variant effect score predictions, AlphaGenome
 Variant Impact (AVI) score, and feature importances across the entire human
-genome. Learn more
-[here](https://deepmind.google.com/science/alphagenome/atlas).
+genome. Learn more [here](https://alphagenome.google/atlas).
 
 The API is offered as a free service for
-[non-commercial use](https://deepmind.google.com/science/alphagenome/terms).
-Query rates vary based on demand – the pre-computed Atlas predictions will
-typically have a larger query rate. Other predictions are better suited for
-smaller to medium-scale analyses such as analysing a limited number of genomic
-regions or variants requiring 1000s of predictions, but is likely not suitable
-for large scale analyses requiring more than 1 million predictions.
+[non-commercial use](https://alphagenome.google/terms). Query rates vary based
+on demand – the pre-computed Atlas predictions will typically have a larger
+query rate. Other predictions are better suited for smaller to medium-scale
+analyses such as analysing a limited number of genomic regions or variants
+requiring 1000s of predictions, but is likely not suitable for large scale
+analyses requiring more than 1 million predictions.
 
 <!-- mdformat off(Turn off mdformat to retain myst syntax.) -->
 ```{figure} /_static/model_overview.png
@@ -35,8 +34,7 @@ for large scale analyses requiring more than 1 million predictions.
 
 ## Getting started
 
-You can get started by
-[getting an API key](https://deepmind.google.com/science/alphagenome), and
+You can get started by [getting an API key](https://alphagenome.google/api), and
 following our [Quick Start Guide](./colabs/quick_start.ipynb), or watching our
 [AlphaGenome 101 tutorial](https://youtu.be/Xbvloe13nak). Please also check out
 our installation guide, tutorials with comprehensive overviews of plotting,
@@ -74,7 +72,7 @@ Reference documentation for the `alphagenome` package.
 ::::
 <!-- mdformat on -->
 
-``` {toctree}
+```{toctree}
 :maxdepth: 2
 :hidden: False
 

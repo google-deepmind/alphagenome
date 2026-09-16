@@ -4,11 +4,11 @@ AlphaGenome client and variant scorers.
 
 ## DNA Client
 
-``` {eval-rst}
+```{eval-rst}
 .. currentmodule:: alphagenome
 ```
 
-``` {eval-rst}
+```{eval-rst}
 
 .. autosummary::
     :toctree: generated
@@ -22,7 +22,7 @@ AlphaGenome client and variant scorers.
 
 ## DNA Output
 
-``` {eval-rst}
+```{eval-rst}
 
 .. autosummary::
     :toctree: generated
@@ -35,7 +35,7 @@ AlphaGenome client and variant scorers.
 
 ## Variant Scorers
 
-``` {eval-rst}
+```{eval-rst}
 
 .. autosummary::
     :toctree: generated

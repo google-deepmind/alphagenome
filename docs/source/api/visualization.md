@@ -4,11 +4,11 @@ Visualization and plotting tools.
 
 ## Plot
 
-``` {eval-rst}
+```{eval-rst}
 .. currentmodule:: alphagenome
 ```
 
-``` {eval-rst}
+```{eval-rst}
 
 .. autosummary::
     :toctree: generated
@@ -25,7 +25,7 @@ Visualization and plotting tools.
 
 ## Plot components
 
-``` {eval-rst}
+```{eval-rst}
 
 .. autosummary::
     :toctree: generated
@@ -47,7 +47,7 @@ Visualization and plotting tools.
 
 ## Plot transcripts
 
-``` {eval-rst}
+```{eval-rst}
 
 .. autosummary::
     :toctree: generated

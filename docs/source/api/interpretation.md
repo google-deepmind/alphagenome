@@ -4,7 +4,7 @@ Sequence interpretation tools (like in silico mutagenesis).
 
 ## ISM
 
-``` {eval-rst}
+```{eval-rst}
 .. module:: alphagenome.interpretation
 .. currentmodule:: alphagenome
 
