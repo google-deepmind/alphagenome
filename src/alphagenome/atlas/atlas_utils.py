@@ -14,18 +14,19 @@
 
 """Utility functions for the Atlas client."""
 
-from collections.abc import Iterable
+from collections.abc import Sequence
 
 from alphagenome.data import ontology
+
 from alphagenome.protos import dna_model_pb2
 
 
 def build_filter(
     *,
-    requested_scorers: Iterable[str] | None = None,
-    ontology_terms: Iterable[ontology.OntologyTerm | str] | None = None,
-    gene_ids: Iterable[str] | None = None,
-    gene_names: Iterable[str] | None = None,
+    requested_scorers: Sequence[str] | None = None,
+    ontology_terms: Sequence[ontology.OntologyTerm | str] | None = None,
+    gene_ids: Sequence[str] | None = None,
+    gene_names: Sequence[str] | None = None,
 ) -> str:
   """Builds a filter string for the DenseVariantScores response."""
 

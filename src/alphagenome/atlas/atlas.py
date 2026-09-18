@@ -14,7 +14,7 @@
 
 """Client library for querying intervals/variants from the Atlas API."""
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 import concurrent
 import contextlib
 import dataclasses
@@ -110,7 +110,7 @@ class ScorerMetadata:
 
 def _filter_scorer_metadata(
     scorer_metadata: Mapping[str, ScorerMetadata],
-    ontology_terms: Iterable[ontology.OntologyTerm | str] | None = None,
+    ontology_terms: Sequence[ontology.OntologyTerm | str] | None = None,
 ) -> Mapping[str, pd.DataFrame]:
   """Filters scorer metadata to specific ontology terms."""
   ontology_curies = None
@@ -157,7 +157,7 @@ def handle_rpc_error():
 
 
 def convert_variant_scores_to_anndata(
-    variant_scores: Iterable[atlas_service_pb2.DenseVariantScores],
+    variant_scores: Sequence[atlas_service_pb2.DenseVariantScores],
     scorer_track_metadata: Mapping[str, pd.DataFrame] | None,
 ) -> Mapping[str, anndata.AnnData]:
   """Converts a list of DenseVariantScores protos to an AnnData per scorer."""
@@ -266,10 +266,10 @@ class AtlasClient:
       self,
       variant: genome.Variant,
       *,
-      requested_scorers: Iterable[str],
-      ontology_terms: Iterable[ontology.OntologyTerm | str] | None = None,
-      gene_ids: Iterable[str] | None = None,
-      gene_names: Iterable[str] | None = None,
+      requested_scorers: Sequence[str],
+      ontology_terms: Sequence[ontology.OntologyTerm | str] | None = None,
+      gene_ids: Sequence[str] | None = None,
+      gene_names: Sequence[str] | None = None,
   ) -> Mapping[str, anndata.AnnData]:
     """Returns the scores for a single Variant within an Interval."""
     request = atlas_service_pb2.GetDenseVariantScoresRequest(
@@ -292,10 +292,10 @@ class AtlasClient:
       self,
       variants: Sequence[genome.Variant],
       *,
-      requested_scorers: Iterable[str],
-      ontology_terms: Iterable[ontology.OntologyTerm | str] | None = None,
-      gene_ids: Iterable[str] | None = None,
-      gene_names: Iterable[str] | None = None,
+      requested_scorers: Sequence[str],
+      ontology_terms: Sequence[ontology.OntologyTerm | str] | None = None,
+      gene_ids: Sequence[str] | None = None,
+      gene_names: Sequence[str] | None = None,
       progress_bar: bool = True,
       max_workers: int = DEFAULT_MAX_WORKERS,
   ) -> Mapping[str, anndata.AnnData]:
@@ -348,10 +348,10 @@ class AtlasClient:
       self,
       interval: genome.Interval,
       *,
-      requested_scorers: Iterable[str],
-      ontology_terms: Iterable[ontology.OntologyTerm | str] | None = None,
-      gene_ids: Iterable[str] | None = None,
-      gene_names: Iterable[str] | None = None,
+      requested_scorers: Sequence[str],
+      ontology_terms: Sequence[ontology.OntologyTerm | str] | None = None,
+      gene_ids: Sequence[str] | None = None,
+      gene_names: Sequence[str] | None = None,
       progress_bar: bool = True,
       max_workers: int = DEFAULT_MAX_WORKERS,
   ) -> Mapping[str, anndata.AnnData]:
