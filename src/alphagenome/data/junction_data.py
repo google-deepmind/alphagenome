@@ -213,6 +213,22 @@ class JunctionData:
         uns=self.uns,
     )
 
+  def with_name_suffix(self, suffix: str) -> 'JunctionData':
+    """Returns a new `JunctionData` with a suffix added to all track names."""
+    new_metadata = self.metadata.copy()
+    new_metadata['name'] = new_metadata['name'] + suffix
+    return dataclasses.replace(self, metadata=new_metadata)
+
+  def with_metadata_column(
+      self,
+      name: str,
+      value: str | pd.Series,
+  ) -> 'JunctionData':
+    """Returns a new `JunctionData` with an added/updated metadata column."""
+    new_metadata = self.metadata.copy()
+    new_metadata[name] = value
+    return dataclasses.replace(self, metadata=new_metadata)
+
 
 def get_junctions_to_plot(
     *,

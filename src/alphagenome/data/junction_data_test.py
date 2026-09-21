@@ -257,6 +257,50 @@ class JunctionDataTest(parameterized.TestCase):
           predictions.normalize_values(total_k=10.0).values.sum(), 10.0
       )
 
+  def test_with_name_suffix(self):
+    metadata = pd.DataFrame({
+        'name': ['track_1', 'track_2'],
+    })
+    junctions = np.array([
+        genome.Interval('chr1', 10, 11, '+'),
+    ])
+    values = np.array([[1.0, 2.0]], dtype=np.float32)
+    jdata = junction_data.JunctionData(junctions, values, metadata)
+    suffixed = jdata.with_name_suffix('_suff')
+    self.assertListEqual(list(suffixed.names), ['track_1_suff', 'track_2_suff'])
+    self.assertListEqual(list(jdata.names), ['track_1', 'track_2'])
+
+  def test_with_metadata_column(self):
+    metadata = pd.DataFrame({
+        'name': ['track_1', 'track_2'],
+    })
+    junctions = np.array([
+        genome.Interval('chr1', 10, 11, '+'),
+    ])
+    values = np.array([[1.0, 2.0]], dtype=np.float32)
+    jdata = junction_data.JunctionData(junctions, values, metadata)
+    updated = jdata.with_metadata_column('biosample_name', 'cell_0')
+    self.assertIn('biosample_name', updated.metadata.columns)
+    self.assertListEqual(
+        list(updated.metadata['biosample_name']), ['cell_0', 'cell_0']
+    )
+    self.assertNotIn('biosample_name', jdata.metadata.columns)
+
+  def test_with_metadata_column_series(self):
+    metadata = pd.DataFrame({
+        'name': ['track_1', 'track_2'],
+    })
+    junctions = np.array([
+        genome.Interval('chr1', 10, 11, '+'),
+    ])
+    values = np.array([[1.0, 2.0]], dtype=np.float32)
+    jdata = junction_data.JunctionData(junctions, values, metadata)
+    series_value = pd.Series(['a', 'b'])
+    updated = jdata.with_metadata_column('new_col', series_value)
+    self.assertIn('new_col', updated.metadata.columns)
+    self.assertListEqual(list(updated.metadata['new_col']), ['a', 'b'])
+    self.assertNotIn('new_col', jdata.metadata.columns)
+
 
 if __name__ == '__main__':
   absltest.main()
