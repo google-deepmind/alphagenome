@@ -198,6 +198,19 @@ If you use AlphaGenome in your research, please cite using:
 }
 ```
 
+If you use AlphaGenome Atlas website, API or scores, please cite:
+
+```bibtex
+@article{alphagenome_atlas,
+  title={{AlphaGenome} Atlas: in silico mutagenesis of the entire human genome improves prioritization and interpretation of non-coding variants},
+  author={Cheng, Jun and Taylor, Kyle R., Nicolaisen, Lauren and Pan, Joshua and Bycroft, Clare and Perino, Matteo and Ward, Tom and Hawkes, Gareth and Covil, Laura E. and Weilert, Melanie and Thomas, Raina W. and Latysheva, Natasha and Hirschmann, J. Maile and Chen, Xi Dawn and Beaumont, Robin N. and Chundru, V Kartik and Weedon, Michael N. and Bourdareau, Simon and Chu, Hoyin and Hariharan, Dhavanthi and Kagohara, Thais and Ten\'{o}rio, Lucas and Ushigome, Yosuke and Shearer, Courtney A. and Ikica, Barbara and Fang, Ada and Naciri, Mouad and Johnston, Victoria and Green, Richard and Wong, Lai Hong and Dutordoir, Vincent and Mottram, Anne and Gayoso, Adam and Arvaniti, Eirini and Rehm, Heidi L. and Chen, Fei and Lareau, Caleb A. and Wright, Caroline F. and O'Donnell-Luria, Anne and Zeitlinger, Julia and Kohli, Pushmeet, and Avsec, {\v Z}iga },
+  year = {2026},
+  doi = {10.64898/2026.09.16.26363192},
+  publisher = {Cold Spring Harbor Laboratory Press},
+  journal = {medRxiv}
+}
+```
+
 <!-- enableFinding(SNIPPET_INVALID_LANGUAGE) -->
 
 ## Acknowledgements
