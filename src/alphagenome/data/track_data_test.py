@@ -156,11 +156,11 @@ class TrackDataSlicingTest(parameterized.TestCase):
       self.assertEqual(tdata2.interval.end, 2)
       self.assertEqual(tdata2.width, tdata2.interval.width)
       self.assertEqual(tdata2.width, 2)
-      # Fails because (end - start) is not evenly divisible by resolution.
+      # Fails because slice endpoints do not align with the reference bins.
       with self.assertRaises(ValueError):
         tdata.slice_by_positions(0, 3)
       with self.assertRaises(ValueError):
-        tdata.slice_by_positions(0, 1)
+        tdata.slice_by_positions(1, 3)
     # Fails because there are no positional axes to slice into.
     else:
       self.assertEqual(tdata.width, 0)
@@ -204,15 +204,15 @@ class TrackDataSlicingTest(parameterized.TestCase):
       self.assertEqual(tdata2.interval.end, 3)
       self.assertEqual(tdata2.width, tdata2.interval.width)
       self.assertEqual(tdata2.width, 2)
-      # Fails because (end - start) is not evenly divisible by resolution.
+      # Fails because slice endpoints do not align with the reference bins.
       with self.assertRaises(ValueError):
         tdata.slice_by_interval(genome.Interval('chr1', 1, 4))
       with self.assertRaises(ValueError):
-        tdata.slice_by_interval(genome.Interval('chr1', 1, 2))
+        tdata.slice_by_interval(genome.Interval('chr1', 2, 4))
 
       # Same would work if we set match_resolution=True.
       tdata2 = tdata.slice_by_interval(
-          genome.Interval('chr1', 1, 4), match_resolution=True
+          genome.Interval('chr1', 2, 4), match_resolution=True
       )
       self.assertIsNotNone(tdata2.interval)
       self.assertEqual(tdata2.interval.start, 1)
