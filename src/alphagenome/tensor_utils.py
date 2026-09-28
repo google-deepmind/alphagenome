@@ -89,9 +89,11 @@ def pack_tensor(
     sequence of TensorChunk protos.
   """
   packed = tensor_pb2.Tensor()
+  value = np.asarray(value)
+  packed.shape[:] = value.shape
+  # A contiguous buffer has at least one dimension; retain the original shape.
   value = np.ascontiguousarray(value)
 
-  packed.shape[:] = value.shape
   packed.data_type = _NUMPY_DTYPE_TO_TENSOR_DTYPE[value.dtype]
 
   chunks = []
