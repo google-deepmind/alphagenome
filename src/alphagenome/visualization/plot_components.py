@@ -33,15 +33,60 @@ from alphagenome.data import track_data
 from alphagenome.data import transcript as transcript_utils
 from alphagenome.visualization import plot as plot_lib
 from alphagenome.visualization import plot_transcripts
+import anndata
+import immutabledict
 from jaxtyping import Float32  # pylint: disable=g-importing-member
 import matplotlib
+from matplotlib import collections as plt_collections
 from matplotlib import colors as plt_colors
+from matplotlib import patches as mpatches
+from matplotlib import ticker as mticker
 import matplotlib.pyplot as plt
 import numpy as np
 
 # String, RGB or RGBA color.
 _ColorType = (
     str | tuple[float, float, float] | tuple[float, float, float, float]
+)
+
+FEATURE_CONTRIBUTIONS_COLORMAP: immutabledict.immutabledict[str, str] = (
+    immutabledict.immutabledict({
+        'PROTEIN_TERMINATION': '#52606d',
+        'START_LOST': '#94a3b0',
+        'STOP_LOST': '#d2dae2',
+        'ALPHAMISSENSE': '#4393c3',
+        'PHASTCONS_470_WAY': '#80dab4',
+        'CACTUS_241_WAY': '#379577',
+        'MAX_ABS_CAGE': '#868beb',
+        'MAX_ABS_PROCAP': '#c3c4f5',
+        'MAX_ABS_RNA_SEQ': '#2a2d78',
+        'MERGED_SPLICING': '#f3a380',
+        'MAX_ABS_POLYADENYLATION': '#555ac6',
+        'MAX_ABS_ATAC': '#f0e801',
+        'MAX_ABS_DNASE': '#c5be0f',
+        'MAX_ABS_CHIP_TF': '#f5b8f5',
+        'MAX_ABS_CHIP_HISTONE': '#df62df',
+        'MAX_ABS_CONTACT_MAPS': '#fbf68d',
+    })
+)
+
+FEATURE_CONTRIBUTIONS_ORDER: tuple[str, ...] = (
+    'MAX_ABS_ATAC',
+    'MAX_ABS_CONTACT_MAPS',
+    'MAX_ABS_DNASE',
+    'MAX_ABS_CHIP_TF',
+    'MAX_ABS_CHIP_HISTONE',
+    'MAX_ABS_CAGE',
+    'MAX_ABS_PROCAP',
+    'MAX_ABS_RNA_SEQ',
+    'MAX_ABS_POLYADENYLATION',
+    'MERGED_SPLICING',
+    'ALPHAMISSENSE',
+    'START_LOST',
+    'STOP_LOST',
+    'PROTEIN_TERMINATION',
+    'PHASTCONS_470_WAY',
+    'CACTUS_241_WAY',
 )
 
 
@@ -1208,6 +1253,171 @@ class EmptyComponent(AbstractComponent):
     ax.set_yticks([])  # pytype: disable=not-callable
     ax.spines['left'].set_visible(False)
     ax.spines['right'].set_visible(False)
+
+
+class FeatureContribution(AbstractComponent):
+  """Stacked SHAP bar chart showing feature importance per variant."""
+
+  def __init__(
+      self,
+      feature_contributions: anndata.AnnData,
+      *,
+      width: float = 1.0,
+      fig_height: float = 3.0,
+      feature_colormap: Mapping[str, str] = FEATURE_CONTRIBUTIONS_COLORMAP,
+      feature_order: Sequence[str] = FEATURE_CONTRIBUTIONS_ORDER,
+      ylabel: str = '',
+      show_legend: bool = False,
+      max_y_ticks: int | None = 3,
+  ):
+    """Initializes the `FeatureContribution` component.
+
+    Args:
+      feature_contributions: AnnData with feature contribution scores shaped
+        `(n_variants, num_features)`. Must contain a `'variant'` column in
+        `obs`. When multiple variants share a genomic position, the variant with
+        the maximum sum of feature contributions is plotted.
+      width: Width of the bars.
+      fig_height: Height of the panel in inches.
+      feature_colormap: Mapping from feature names to colors. Defaults to
+        `FEATURE_CONTRIBUTIONS_COLORMAP`.
+      feature_order: Desired order of features in the plot. Defaults to
+        `FEATURE_CONTRIBUTIONS_ORDER`.
+      ylabel: Y-axis label.
+      show_legend: Whether to display a legend.
+      max_y_ticks: Maximum number of Y-axis tick divisions (default: 3).
+
+    Raises:
+      ValueError: If `'variant'` is not in `feature_contributions.obs`.
+    """
+    if 'variant' not in feature_contributions.obs:
+      raise ValueError("feature_contributions must have 'variant' in obs.")
+
+    positions = np.array(
+        [v.position for v in feature_contributions.obs['variant']],
+        dtype=np.int64,
+    )
+    values = np.asarray(feature_contributions.X, dtype=np.float32)
+    order = np.lexsort((-values.sum(axis=1), positions))
+    self._positions, first_idx = np.unique(positions[order], return_index=True)
+    selected_idx = order[first_idx]
+
+    feature_names = list(
+        feature_contributions.var['name']
+        if 'name' in feature_contributions.var
+        else feature_contributions.var.index.astype(str)
+    )
+
+    order_lookup = {name: i for i, name in enumerate(feature_order or ())}
+    feature_sort_idx = sorted(
+        range(len(feature_names)),
+        key=lambda i: (
+            order_lookup.get(feature_names[i], len(order_lookup)),
+            feature_names[i],
+        ),
+    )
+    self._feature_names = [feature_names[i] for i in feature_sort_idx]
+    self._values = values[selected_idx][:, feature_sort_idx]
+
+    self._width = width
+    self._fig_height = fig_height
+    self._feature_colormap = feature_colormap
+    self._ylabel = ylabel
+    self._show_legend = show_legend
+    self._max_y_ticks = max_y_ticks
+
+  def get_ax_height(self, axis_index: int) -> float:
+    """Returns the height of the axis."""
+    return self._fig_height
+
+  @property
+  def num_axes(self) -> int:
+    """Returns the number of matplotlib axes required by the component."""
+    return 1
+
+  def plot_ax(
+      self,
+      ax: matplotlib.axes.Axes,
+      axis_index: int,
+      interval: genome.Interval,
+  ):
+    """Plots the stacked SHAP bar chart on the given axis.
+
+    Args:
+      ax: The matplotlib axis to plot on.
+      axis_index: The index of the axis.
+      interval: The genomic interval to plot.
+    """
+    del axis_index  # Unused.
+    mask = (self._positions >= interval.start) & (
+        self._positions < interval.end
+    )
+    x = self._positions[mask]
+    values = self._values[mask]
+
+    pos_bottom = np.zeros(len(x), dtype=np.float32)
+    neg_bottom = np.zeros(len(x), dtype=np.float32)
+
+    legend_handles = []
+    seen_labels = set()
+
+    for f_idx, feature_name in enumerate(self._feature_names):
+      color = self._feature_colormap.get(feature_name, '#888888')
+      vals = values[:, f_idx]
+      bottom = np.where(vals >= 0, pos_bottom, neg_bottom)
+      top = bottom + vals
+
+      nonzero = vals != 0
+      bx = x[nonzero]
+      bb = bottom[nonzero]
+      bt = top[nonzero]
+      verts = np.stack(
+          [
+              np.column_stack([bx, bb]),
+              np.column_stack([bx + self._width, bb]),
+              np.column_stack([bx + self._width, bt]),
+              np.column_stack([bx, bt]),
+          ],
+          axis=1,
+      )
+
+      collection = plt_collections.PolyCollection(
+          verts,
+          facecolors=color,
+          edgecolors='none',
+          label=feature_name,
+          rasterized=True,
+      )
+      ax.add_collection(collection)
+
+      if self._show_legend and feature_name not in seen_labels:
+        seen_labels.add(feature_name)
+        legend_handles.append(
+            mpatches.Patch(
+                facecolor=color, edgecolor='none', label=feature_name
+            )
+        )
+
+      pos_bottom += np.maximum(vals, 0)
+      neg_bottom += np.minimum(vals, 0)
+
+    ax.autoscale_view()
+    if self._ylabel:
+      ax.set_ylabel(self._ylabel)
+    ax.axhline(0, color='black', linewidth=0.35)
+    if self._max_y_ticks is not None and self._max_y_ticks > 0:
+      ax.yaxis.set_major_locator(
+          mticker.MaxNLocator(nbins=max(1, self._max_y_ticks - 1))
+      )
+
+    if self._show_legend and legend_handles:
+      ax.legend(
+          handles=legend_handles,
+          loc='upper left',
+          bbox_to_anchor=(1.01, 1.0),
+          fontsize='small',
+          ncol=2,
+      )
 
 
 class AbstractAnnotation(abc.ABC):

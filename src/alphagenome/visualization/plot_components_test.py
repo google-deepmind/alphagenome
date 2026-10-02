@@ -19,7 +19,9 @@ from alphagenome.data import junction_data
 from alphagenome.data import track_data
 from alphagenome.data import transcript as transcript_utils
 from alphagenome.visualization import plot_components
+import anndata
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -54,6 +56,22 @@ _SPLICING_METADATA = pd.DataFrame(
         padding=[False] * 2,
     )
 )
+
+
+def _create_feature_contribitons(
+    n_positions: int = 10, n_features: int = 3
+) -> anndata.AnnData:
+  scores = (
+      np.random.default_rng(0)
+      .standard_normal((n_positions, n_features))
+      .astype(np.float32)
+  )
+  var = pd.DataFrame({'name': [f'feature_{i}' for i in range(n_features)]})
+  variants = [
+      genome.Variant('chr1', 101 + i, 'T', 'A') for i in range(n_positions)
+  ]
+  obs = pd.DataFrame({'variant': variants})
+  return anndata.AnnData(X=scores, var=var, obs=obs)
 
 
 class PlotComponentsTest(parameterized.TestCase):
@@ -220,6 +238,7 @@ class PlotComponentsTest(parameterized.TestCase):
                 ylabel='contribution scores',
                 ylim=logo_ylim,
             ),
+            plot_components.FeatureContribution(_create_feature_contribitons()),
         ],
         interval=subinterval,
         annotations=[
@@ -237,6 +256,123 @@ class PlotComponentsTest(parameterized.TestCase):
         ],
     )
     self.assertIsInstance(fig, matplotlib.figure.Figure)
+    plt.close(fig)
+
+  def test_feature_contribution_axes_config(self):
+    adata = _create_feature_contribitons()
+    comp = plot_components.FeatureContribution(adata, fig_height=4.0)
+    self.assertEqual(comp.num_axes, 1)
+    self.assertEqual(comp.get_ax_height(0), 4.0)
+
+  def test_feature_contribution_missing_variant_raises(self):
+    adata = anndata.AnnData(
+        X=np.zeros((2, 2), dtype=np.float32),
+        obs=pd.DataFrame({'other': [1, 2]}),
+    )
+    with self.assertRaisesRegex(ValueError, "must have 'variant' in obs"):
+      plot_components.FeatureContribution(adata)
+
+  def test_feature_contribution_duplicate_positions_takes_max_sum(self):
+    variants = [
+        genome.Variant('chr1', 100, 'A', 'C'),  # sum = 1.0 + 1.0 = 2.0
+        genome.Variant('chr1', 100, 'A', 'G'),  # sum = 4.0 - 0.5 = 3.5 (max)
+        genome.Variant('chr1', 100, 'A', 'T'),  # sum = 5.0 - 3.0 = 2.0
+    ]
+    adata = anndata.AnnData(
+        X=np.array([[1.0, 1.0], [4.0, -0.5], [5.0, -3.0]], dtype=np.float32),
+        obs=pd.DataFrame({'variant': variants}),
+        var=pd.DataFrame({'name': ['f0', 'f1']}),
+    )
+    comp = plot_components.FeatureContribution(
+        adata, feature_order=['f0', 'f1']
+    )
+    _, ax = plt.subplots()
+    comp.plot_ax(ax, axis_index=0, interval=genome.Interval('chr1', 99, 102))
+
+    self.assertLen(ax.collections, 2)
+    self.assertLen(ax.collections[0].get_paths(), 1)
+    self.assertLen(ax.collections[1].get_paths(), 1)
+    np.testing.assert_allclose(
+        ax.collections[0].get_paths()[0].vertices[:4],
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 4.0], [100.0, 4.0]],
+    )
+    np.testing.assert_allclose(
+        ax.collections[1].get_paths()[0].vertices[:4],
+        [[100.0, 0.0], [101.0, 0.0], [101.0, -0.5], [100.0, -0.5]],
+    )
+    plt.close()
+
+  def test_feature_contribution_feature_ordering_and_stacking(self):
+    variant = genome.Variant('chr1', 100, 'T', 'A')
+    adata = anndata.AnnData(
+        X=np.array([[1.0, 2.0, 3.0]], dtype=np.float32),
+        obs=pd.DataFrame({'variant': [variant]}),
+        var=pd.DataFrame(
+            {'name': ['unknown_b', 'unknown_a', 'merged_splicing']},
+            index=['unknown_b', 'unknown_a', 'merged_splicing'],
+        ),
+    )
+    comp = plot_components.FeatureContribution(adata)
+    _, ax = plt.subplots()
+    comp.plot_ax(ax, axis_index=0, interval=genome.Interval('chr1', 99, 102))
+
+    self.assertLen(ax.collections, 3)
+    self.assertEqual(ax.collections[0].get_label(), 'merged_splicing')
+    self.assertEqual(ax.collections[1].get_label(), 'unknown_a')
+    self.assertEqual(ax.collections[2].get_label(), 'unknown_b')
+
+    # Verify cumulative positive stacking: [0, 3], [3, 5], [5, 6].
+    np.testing.assert_allclose(
+        ax.collections[0].get_paths()[0].vertices[:4],
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 3.0], [100.0, 3.0]],
+    )
+    np.testing.assert_allclose(
+        ax.collections[1].get_paths()[0].vertices[:4],
+        [[100.0, 3.0], [101.0, 3.0], [101.0, 5.0], [100.0, 5.0]],
+    )
+    np.testing.assert_allclose(
+        ax.collections[2].get_paths()[0].vertices[:4],
+        [[100.0, 5.0], [101.0, 5.0], [101.0, 6.0], [100.0, 6.0]],
+    )
+    plt.close()
+
+  def test_feature_contribution_polycollections_and_legend(self):
+    variant1 = genome.Variant('chr1', 100, 'T', 'A')
+    variant2 = genome.Variant('chr1', 101, 'T', 'A')
+    adata = anndata.AnnData(
+        X=np.array([[2.0, 0.0, 0.0], [0.0, -1.5, 0.0]], dtype=np.float32),
+        obs=pd.DataFrame({'variant': [variant1, variant2]}),
+        var=pd.DataFrame({'name': ['f0', 'f1', 'f2']}),
+    )
+    comp = plot_components.FeatureContribution(
+        adata,
+        feature_order=['F0', 'F1', 'F2'],
+        show_legend=True,
+        max_y_ticks=2,
+    )
+    _, ax = plt.subplots()
+    comp.plot_ax(ax, axis_index=0, interval=genome.Interval('chr1', 100, 102))
+
+    self.assertEmpty(ax.patches)
+    self.assertLen(ax.collections, 3)
+    self.assertIsInstance(
+        ax.collections[0], matplotlib.collections.PolyCollection
+    )
+    self.assertTrue(ax.collections[0].get_rasterized())
+    self.assertLen(ax.collections[0].get_paths(), 1)
+    self.assertLen(ax.collections[1].get_paths(), 1)
+    self.assertEmpty(ax.collections[2].get_paths())
+
+    locator = ax.yaxis.get_major_locator()
+    self.assertIsInstance(locator, matplotlib.ticker.MaxNLocator)
+
+    legend = ax.get_legend()
+    self.assertIsNotNone(legend)
+    self.assertLen(legend.get_texts(), 3)
+    self.assertEqual(legend.get_texts()[0].get_text(), 'f0')
+    self.assertEqual(legend.get_texts()[1].get_text(), 'f1')
+    self.assertEqual(legend.get_texts()[2].get_text(), 'f2')
+    plt.close()
 
 
 if __name__ == '__main__':
