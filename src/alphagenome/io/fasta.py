@@ -20,11 +20,14 @@ from alphagenome.data import genome
 import fsspec
 import pyfaidx
 
-_REVERSE_COMPLEMENT_TRANSLATION = str.maketrans('ATCGN', 'TAGCN')
+_REVERSE_COMPLEMENT_TRANSLATION = str.maketrans(
+    'ACGTRYSWKMBDHVNacgtryswkmbdhvn',
+    'TGCAYRSWMKVHDBNtgcayrswmkvhdbn',
+)
 
 
 def reverse_complement(sequence: str) -> str:
-  """Returns the reverse complement of a DNA sequence string."""
+  """Returns the DNA reverse complement, preserving IUPAC ambiguity and case."""
   return sequence.translate(_REVERSE_COMPLEMENT_TRANSLATION)[::-1]
 
 
