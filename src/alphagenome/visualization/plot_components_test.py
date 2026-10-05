@@ -58,7 +58,7 @@ _SPLICING_METADATA = pd.DataFrame(
 )
 
 
-def _create_feature_contribitons(
+def _create_feature_contributions(
     n_positions: int = 10, n_features: int = 3
 ) -> anndata.AnnData:
   scores = (
@@ -238,7 +238,10 @@ class PlotComponentsTest(parameterized.TestCase):
                 ylabel='contribution scores',
                 ylim=logo_ylim,
             ),
-            plot_components.FeatureContribution(_create_feature_contribitons()),
+            plot_components.FeatureContribution(
+                _create_feature_contributions()
+            ),
+            plot_components.ScoreBar(_create_feature_contributions()),
         ],
         interval=subinterval,
         annotations=[
@@ -259,7 +262,7 @@ class PlotComponentsTest(parameterized.TestCase):
     plt.close(fig)
 
   def test_feature_contribution_axes_config(self):
-    adata = _create_feature_contribitons()
+    adata = _create_feature_contributions()
     comp = plot_components.FeatureContribution(adata, fig_height=4.0)
     self.assertEqual(comp.num_axes, 1)
     self.assertEqual(comp.get_ax_height(0), 4.0)
@@ -372,6 +375,62 @@ class PlotComponentsTest(parameterized.TestCase):
     self.assertEqual(legend.get_texts()[0].get_text(), 'f0')
     self.assertEqual(legend.get_texts()[1].get_text(), 'f1')
     self.assertEqual(legend.get_texts()[2].get_text(), 'f2')
+    plt.close()
+
+  def test_score_bar_single_feature(self):
+    variants = [
+        genome.Variant('chr1', 100, 'A', 'C'),
+        genome.Variant('chr1', 101, 'T', 'G'),
+    ]
+    adata = anndata.AnnData(
+        X=np.array([[3.5], [1.2]], dtype=np.float32),
+        obs=pd.DataFrame({'variant': variants}),
+    )
+    comp = plot_components.ScoreBar(
+        adata, color='#0053d6', ylabel='AVI Phred', fig_height=1.5
+    )
+    self.assertEqual(comp.get_ax_height(0), 1.5)
+
+    _, ax = plt.subplots()
+    comp.plot_ax(ax, axis_index=0, interval=genome.Interval('chr1', 100, 102))
+
+    self.assertLen(ax.collections, 1)
+    self.assertIsNone(ax.get_legend())
+    self.assertEqual(ax.get_ylabel(), 'AVI Phred')
+    np.testing.assert_allclose(
+        ax.collections[0].get_facecolor()[0],
+        matplotlib.colors.to_rgba('#0053d6'),
+    )
+    np.testing.assert_allclose(
+        ax.collections[0].get_paths()[0].vertices[:4],
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 3.5], [100.0, 3.5]],
+    )
+    np.testing.assert_allclose(
+        ax.collections[0].get_paths()[1].vertices[:4],
+        [[101.0, 0.0], [102.0, 0.0], [102.0, 1.2], [101.0, 1.2]],
+    )
+    plt.close()
+
+  def test_score_bar_multiple_features_sums_with_nans(self):
+    variants = [
+        genome.Variant('chr1', 100, 'A', 'C'),  # nansum = 1.5 + 2.5 = 4.0
+        genome.Variant('chr1', 100, 'A', 'G'),  # nansum = 5.0 + 0.0 = 5.0
+    ]
+    adata = anndata.AnnData(
+        X=np.array([[1.5, 2.5], [5.0, np.nan]], dtype=np.float32),
+        obs=pd.DataFrame({'variant': variants}),
+        var=pd.DataFrame({'name': ['f0', 'f1']}),
+    )
+    comp = plot_components.ScoreBar(adata)
+    _, ax = plt.subplots()
+    comp.plot_ax(ax, axis_index=0, interval=genome.Interval('chr1', 99, 102))
+
+    self.assertLen(ax.collections, 1)
+    self.assertLen(ax.collections[0].get_paths(), 1)
+    np.testing.assert_allclose(
+        ax.collections[0].get_paths()[0].vertices[:4],
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 5.0], [100.0, 5.0]],
+    )
     plt.close()
 
 

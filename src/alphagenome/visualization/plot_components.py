@@ -1269,6 +1269,7 @@ class FeatureContribution(AbstractComponent):
       ylabel: str = '',
       show_legend: bool = False,
       max_y_ticks: int | None = 3,
+      default_color: str = '#888888',
   ):
     """Initializes the `FeatureContribution` component.
 
@@ -1286,6 +1287,7 @@ class FeatureContribution(AbstractComponent):
       ylabel: Y-axis label.
       show_legend: Whether to display a legend.
       max_y_ticks: Maximum number of Y-axis tick divisions (default: 3).
+      default_color: Fallback color for features not in `feature_colormap`.
 
     Raises:
       ValueError: If `'variant'` is not in `feature_contributions.obs`.
@@ -1297,7 +1299,7 @@ class FeatureContribution(AbstractComponent):
         [v.position for v in feature_contributions.obs['variant']],
         dtype=np.int64,
     )
-    values = np.asarray(feature_contributions.X, dtype=np.float32)
+    values = np.nan_to_num(np.asarray(feature_contributions.X), nan=0.0)
     order = np.lexsort((-values.sum(axis=1), positions))
     self._positions, first_idx = np.unique(positions[order], return_index=True)
     selected_idx = order[first_idx]
@@ -1325,6 +1327,7 @@ class FeatureContribution(AbstractComponent):
     self._ylabel = ylabel
     self._show_legend = show_legend
     self._max_y_ticks = max_y_ticks
+    self._default_color = default_color
 
   def get_ax_height(self, axis_index: int) -> float:
     """Returns the height of the axis."""
@@ -1362,7 +1365,7 @@ class FeatureContribution(AbstractComponent):
     seen_labels = set()
 
     for f_idx, feature_name in enumerate(self._feature_names):
-      color = self._feature_colormap.get(feature_name, '#888888')
+      color = self._feature_colormap.get(feature_name, self._default_color)
       vals = values[:, f_idx]
       bottom = np.where(vals >= 0, pos_bottom, neg_bottom)
       top = bottom + vals
@@ -1418,6 +1421,42 @@ class FeatureContribution(AbstractComponent):
           fontsize='small',
           ncol=2,
       )
+
+
+class ScoreBar(FeatureContribution):
+  """Component for plotting a single score per variant."""
+
+  def __init__(
+      self,
+      adata: anndata.AnnData,
+      *,
+      width: float = 1.0,
+      fig_height: float = 3.0,
+      ylabel: str = '',
+      max_y_ticks: int | None = 3,
+      color: str = '#888888',
+  ):
+    """Initializes the `ScoreBar` component.
+
+    Args:
+      adata: AnnData with scores shaped `(n_variants, N)`. Must contain a
+        `'variant'` column in `obs`. If `N > 1`, the scores are summed.
+      width: Width of the bars.
+      fig_height: Height of the panel in inches.
+      ylabel: Y-axis label.
+      max_y_ticks: Maximum number of Y-axis tick divisions (default: 3).
+      color: Color to set the bars.
+    """
+    scores = np.nansum(adata.X, axis=1, keepdims=True)
+    super().__init__(
+        anndata.AnnData(X=scores, obs=adata.obs),
+        width=width,
+        fig_height=fig_height,
+        ylabel=ylabel,
+        show_legend=False,
+        max_y_ticks=max_y_ticks,
+        default_color=color,
+    )
 
 
 class AbstractAnnotation(abc.ABC):
