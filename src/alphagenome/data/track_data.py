@@ -667,7 +667,7 @@ class TrackData:
     })
     df_strands = df_strands[df_strands.strand != genome.STRAND_UNSTRANDED]
     df_strands.sort_values(['strand', 'name'], inplace=True)
-    if np.all(df_strands.groupby('name').size() != 2):
+    if np.any(df_strands.groupby('name').size() != 2):
       raise ValueError('Not all stranded tracks have both + and - strand.')
     if (df_strands.strand == genome.STRAND_POSITIVE).sum() != (
         df_strands.strand == genome.STRAND_NEGATIVE
