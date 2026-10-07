@@ -442,7 +442,7 @@ class OutputTest(parameterized.TestCase):
       if output_type in mapping:
         self.assertIs(
             output_metadata.get(output_type),
-            output.get(output_type).metadata,  # pytype: disable=attribute-error
+            output.get(output_type).metadata,
         )
       else:
         self.assertIsNone(output_metadata.get(output_type))

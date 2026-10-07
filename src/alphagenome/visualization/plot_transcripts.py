@@ -341,9 +341,7 @@ def draw_strand_arrows(
 
   fig = ax.get_figure()
   if fig is not None:
-    _, fig_height_inches = (
-        fig.get_size_inches()  # pytype: disable=attribute-error
-    )
+    _, fig_height_inches = fig.get_size_inches()
     ax_height_inches = ax.get_position().height * fig_height_inches
     y_range = num_transcripts + 2
     if y_range > 0:

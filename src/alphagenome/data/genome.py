@@ -807,7 +807,7 @@ class Variant:
   @classmethod
   def from_dict(cls, dictionary: Mapping[str, Any] | Self) -> Self:
     """Creates a `Variant` from a dictionary."""
-    return cls(**dictionary)  # pytype: disable=bad-return-type
+    return cls(**dictionary)  # pyrefly: ignore[bad-unpacking, missing-argument]
 
   def to_proto(self) -> dna_model_pb2.Variant:
     """Converts the variant to a protobuf message."""

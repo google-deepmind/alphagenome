@@ -339,15 +339,11 @@ class Transcript:
   def splice_donors(self) -> list[genome.Interval]:
     # To be consistent with the splice sites defined by intron start and end,
     # the overhang for donor and acceptor are different.
-    return self._get_splice_sites(  # pytype: disable=bad-return-type  # enable-cached-property
-        False, intron_overhang=1, exon_overhang=0
-    )
+    return self._get_splice_sites(False, intron_overhang=1, exon_overhang=0)
 
   @functools.cached_property
   def splice_acceptors(self) -> list[genome.Interval]:
-    return self._get_splice_sites(  # pytype: disable=bad-return-type  # enable-cached-property
-        True, intron_overhang=0, exon_overhang=1
-    )
+    return self._get_splice_sites(True, intron_overhang=0, exon_overhang=1)
 
   # TODO: b/376465275 - deal with cases where intron shorter than 4 bp length.
   def _get_splice_sites(
@@ -480,9 +476,7 @@ class Transcript:
     intervals_per_feature = collections.defaultdict(list)
     exon_row = None
     for _, row in transcript_df.iterrows():
-      interval = genome.Interval.from_pyranges_dict(
-          dict(row), ignore_info=True
-      )  # pytype: disable=wrong-arg-types  # pandas-drop-duplicates-overloads
+      interval = genome.Interval.from_pyranges_dict(dict(row), ignore_info=True)
       if row.Feature in ['CDS', 'stop_codon']:
         interval.info['frame'] = int(row.Frame)
       if exon_row is None and row.Feature == 'exon':
@@ -717,16 +711,12 @@ class TranscriptExtractor:
       self,
       gtf_df: pd.DataFrame,
   ) -> dict[str, Transcript]:
-    return (
-        {  # pytype: disable=bad-return-type  # pandas-drop-duplicates-overloads
-            transcript_id: (
-                Transcript.fix_truncation(
-                    Transcript.from_gtf_df(gtf_subset, ignore_info=False)
-                )
-            )
-            for transcript_id, gtf_subset in gtf_df.groupby('transcript_id')
-        }
-    )
+    return {  # pyrefly: ignore[bad-return]
+        transcript_id: Transcript.fix_truncation(
+            Transcript.from_gtf_df(gtf_subset, ignore_info=False)
+        )
+        for transcript_id, gtf_subset in gtf_df.groupby('transcript_id')
+    }
 
   def extract(self, interval: genome.Interval) -> list[Transcript]:
     """Extract transcripts overlapping an interval.

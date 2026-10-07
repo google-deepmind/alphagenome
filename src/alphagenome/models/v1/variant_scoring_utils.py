@@ -149,7 +149,7 @@ def merge_stranded_gene_tracks(
 
   merged_scores = _merge_scores(scores.X)
   merged_layers = {}
-  for k, v in scores.layers.items():  # pyrefly: ignore[missing-attribute]
+  for k, v in scores.layers.items():
     if k is not None:
       merged_layers[k] = _merge_scores(v)  # pyrefly: ignore[bad-argument-type]
 

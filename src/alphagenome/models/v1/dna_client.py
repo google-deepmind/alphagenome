@@ -111,7 +111,7 @@ def retry_rpc(
         attempt += 1
         return function(*args, **kwargs)
       except grpc.RpcError as e:
-        error_code = e.code()  # pytype: disable=attribute-error
+        error_code = e.code()  # pyrefly: ignore[missing-attribute]
         if error_code not in retry_status_codes or attempt >= max_attempts:
           raise e
         time.sleep(current_backoff)
@@ -237,25 +237,41 @@ def _construct_output(
     ],
 ):
   """Helper to construct an Output dataclass from a mapping of output types."""
-  # pytype: disable=bad-argument-type
   output = Output(
-      atac=output_dict.get(dna_model_pb2.OUTPUT_TYPE_ATAC),
-      cage=output_dict.get(dna_model_pb2.OUTPUT_TYPE_CAGE),
-      dnase=output_dict.get(dna_model_pb2.OUTPUT_TYPE_DNASE),
-      rna_seq=output_dict.get(dna_model_pb2.OUTPUT_TYPE_RNA_SEQ),
-      chip_histone=output_dict.get(dna_model_pb2.OUTPUT_TYPE_CHIP_HISTONE),
-      chip_tf=output_dict.get(dna_model_pb2.OUTPUT_TYPE_CHIP_TF),
-      splice_sites=output_dict.get(dna_model_pb2.OUTPUT_TYPE_SPLICE_SITES),
-      splice_site_usage=output_dict.get(
+      atac=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_ATAC
+      ),
+      cage=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_CAGE
+      ),
+      dnase=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_DNASE
+      ),
+      rna_seq=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_RNA_SEQ
+      ),
+      chip_histone=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_CHIP_HISTONE
+      ),
+      chip_tf=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_CHIP_TF
+      ),
+      splice_sites=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_SPLICE_SITES
+      ),
+      splice_site_usage=output_dict.get(  # pyrefly: ignore[bad-argument-type]
           dna_model_pb2.OUTPUT_TYPE_SPLICE_SITE_USAGE
       ),
-      splice_junctions=output_dict.get(
+      splice_junctions=output_dict.get(  # pyrefly: ignore[bad-argument-type]
           dna_model_pb2.OUTPUT_TYPE_SPLICE_JUNCTIONS
       ),
-      contact_maps=output_dict.get(dna_model_pb2.OUTPUT_TYPE_CONTACT_MAPS),
-      procap=output_dict.get(dna_model_pb2.OUTPUT_TYPE_PROCAP),
+      contact_maps=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_CONTACT_MAPS
+      ),
+      procap=output_dict.get(  # pyrefly: ignore[bad-argument-type]
+          dna_model_pb2.OUTPUT_TYPE_PROCAP
+      ),
   )
-  # pytype: enable=bad-argument-type
   return output
 
 

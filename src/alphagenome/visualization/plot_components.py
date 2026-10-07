@@ -659,9 +659,9 @@ class OverlaidTracks(AbstractComponent):
         ax.legend(self._tdata_ordered.keys(), loc=self._legend_loc)
 
       if self._yticks is not None:
-        ax.set_yticks(self._yticks)  # pytype: disable=not-callable
+        ax.set_yticks(self._yticks)  # pyrefly: ignore[not-callable]
       if self._yticklabels is not None:
-        ax.set_yticklabels(self._yticklabels)  # pytype: disable=not-callable
+        ax.set_yticklabels(self._yticklabels)  # pyrefly: ignore[not-callable]
 
     if self._ylabel_template:
       _set_ylabel(ax, self._get_ylabel(axis_index), self._ylabel_horizontal)
@@ -1011,8 +1011,8 @@ class TranscriptAnnotation(AbstractComponent):
     transcripts = [
         t for t in self._transcripts if t.transcript_interval.overlaps(interval)
     ]
-    ax.set_yticklabels([])  # pytype: disable=not-callable
-    ax.set_yticks([])  # pytype: disable=not-callable
+    ax.set_yticklabels([])  # pyrefly: ignore[not-callable]
+    ax.set_yticks([])  # pyrefly: ignore[not-callable]
     ax.spines['left'].set_visible(False)
     plot_transcripts.plot_transcripts(ax, transcripts, interval, **self._kwargs)
 
@@ -1192,7 +1192,7 @@ class Sashimi(AbstractComponent):
       junctions = [
           j
           for j in junctions
-          if j.overlaps(interval)  # pytype: disable=bad-argument-error
+          if j.overlaps(interval)  # pyrefly: ignore[bad-argument-type]
       ]
 
     plot_lib.sashimi_plot(
@@ -1204,8 +1204,8 @@ class Sashimi(AbstractComponent):
         rng=self._rng,
         color=self._color,
     )
-    ax.set_yticklabels([])  # pytype: disable=not-callable
-    ax.set_yticks([])  # pytype: disable=not-callable
+    ax.set_yticklabels([])  # pyrefly: ignore[not-callable]
+    ax.set_yticks([])  # pyrefly: ignore[not-callable]
     ax.spines['left'].set_visible(False)
     if self._ylabel_template:
       _set_ylabel(ax, self._get_ylabel(axis_index), self._ylabel_horizontal)
@@ -1249,8 +1249,8 @@ class EmptyComponent(AbstractComponent):
       axis_index: The index of the axis.
       interval: The genomic interval to plot.
     """
-    ax.set_yticklabels([])  # pytype: disable=not-callable
-    ax.set_yticks([])  # pytype: disable=not-callable
+    ax.set_yticklabels([])  # pyrefly: ignore[not-callable]
+    ax.set_yticks([])  # pyrefly: ignore[not-callable]
     ax.spines['left'].set_visible(False)
     ax.spines['right'].set_visible(False)
 

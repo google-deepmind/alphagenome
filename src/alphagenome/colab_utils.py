@@ -37,7 +37,7 @@ def get_api_key(secret: str = 'ALPHA_GENOME_API_KEY'):
 
   try:
     # pylint: disable=g-import-not-at-top, import-outside-toplevel
-    from google.colab import userdata  # pytype: disable=import-error
+    from google.colab import userdata  # pyrefly: ignore[missing-import]
     # pylint: enable=g-import-not-at-top, import-outside-toplevel
 
     try:

@@ -896,7 +896,6 @@ class TrackDataGetItemTest(parameterized.TestCase):
     self.assertEqual(sliced_tdata.interval.end, 13)
 
   def test_getitem_errors(self):
-    # pytype: disable=unsupported-operands
     tdata = self._get_test_data(1)
     with self.assertRaises(IndexError):
       _ = tdata[1.0]
@@ -906,7 +905,6 @@ class TrackDataGetItemTest(parameterized.TestCase):
       _ = tdata[1:4:2, :]
     with self.assertRaises(IndexError):
       _ = tdata['a']  # string is not supported for positional
-    # pytype: enable=unsupported-operands
 
     tdata = self._get_test_data(0)
     with self.assertRaises(IndexError):
