@@ -20,12 +20,10 @@ from alphagenome.data import genome
 import fsspec
 import pyfaidx
 
-_REVERSE_COMPLEMENT_TRANSLATION = str.maketrans('ATCGN', 'TAGCN')
-
 
 def reverse_complement(sequence: str) -> str:
   """Returns the reverse complement of a DNA sequence string."""
-  return sequence.translate(_REVERSE_COMPLEMENT_TRANSLATION)[::-1]
+  return pyfaidx.complement(sequence)[::-1]
 
 
 class FastaExtractor:
