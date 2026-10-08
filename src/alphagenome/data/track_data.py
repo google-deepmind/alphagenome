@@ -233,8 +233,8 @@ class TrackData:
       A new `TrackData` object with the sliced values.
 
     Raises:
-      ValueError: If (end - start) is greater than the width, or if (end -
-      start) is not divisible by the resolution.
+      ValueError: If (end - start) is greater than the width, or if either
+        start or end is not divisible by the resolution
     """
     if (end - start) > self.width:
       raise ValueError(
@@ -242,9 +242,9 @@ class TrackData:
           'equal to width.'
       )
 
-    if (end - start) % self.resolution != 0:
+    if start % self.resolution != 0 or end % self.resolution != 0:
       raise ValueError(
-          f'end - start needs to be to be divisible by {self.resolution=}'
+          f'start and end need to be divisible by {self.resolution=}'
       )
 
     sl = slice(self.bin_index(start), self.bin_index(end))
