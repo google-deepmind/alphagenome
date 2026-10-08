@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0]
+
+### Added
+
+-   Feature contribution and score bar plot components, to be able to plot Atlas
+    AVI scores.
+-   Support for `with_name_suffix` and `with_metadata_column` for JunctionData.
+
+### Changed
+
+-   Moved AlphaGenome model API, colabs and protos to stable v1 directory. The
+    current locations will be removed in a future release.
+-   Updated documentation to reflect new v1 directory structure.
+-   Updated Atlas citation to medRxiv pre-print.
+-   Fixed bug with round-tripping scalar values.
+
 ## [0.9.0]
 
 ### Added
