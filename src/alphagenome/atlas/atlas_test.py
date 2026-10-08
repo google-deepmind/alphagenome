@@ -20,6 +20,8 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from alphagenome.atlas import atlas
 from alphagenome.data import genome
+from alphagenome.models.v1 import variant_scorers
+
 from alphagenome.protos import atlas_service_pb2
 from alphagenome.protos.v1 import dna_model_pb2
 import anndata
@@ -79,6 +81,7 @@ class AtlasTest(parameterized.TestCase):
                       },
                       index=[str(i) for i in range(5)],
                   ),
+                  uns={'scorer': 'scorer1'},
               )
           },
       ),
@@ -111,6 +114,7 @@ class AtlasTest(parameterized.TestCase):
                       {'variant': [genome.Variant.from_str('chr1:101:C>A')]},
                       index=['0'],
                   ),
+                  uns={'scorer': 'scorer1'},
               )
           },
       ),
@@ -124,10 +128,16 @@ class AtlasTest(parameterized.TestCase):
                       reference_bases='A',
                       alternate_bases='T',
                   ),
+                  interval=dna_model_pb2.Interval(
+                      chromosome='chr1',
+                      start=0,
+                      end=200,
+                      strand=dna_model_pb2.Strand.STRAND_UNSTRANDED,
+                  ),
                   scores=[
                       atlas_service_pb2.DenseVariantScore(
                           variant_scorer=atlas_service_pb2.VariantScorerInfo(
-                              name='scorer1'
+                              name='RNA_SEQ'
                           ),
                           shape=[1, 1],
                           scores=struct.pack('f', 0.0),
@@ -136,20 +146,28 @@ class AtlasTest(parameterized.TestCase):
               ),
           ],
           metadata={
-              'scorer1': pd.DataFrame(
+              'RNA_SEQ': pd.DataFrame(
                   {'name': ['track1'], 'strand': ['+']}, index=['0']
               )
           },
           expected={
-              'scorer1': anndata.AnnData(
+              'RNA_SEQ': anndata.AnnData(
                   X=np.zeros((1, 1), dtype=np.float32),
                   obs=pd.DataFrame(
-                      {'variant': [genome.Variant.from_str('chr1:100:A>T')]},
+                      {
+                          'variant': [genome.Variant.from_str('chr1:100:A>T')],
+                          'interval': [genome.Interval.from_str('chr1:0-200')],
+                      },
                       index=['0'],
                   ),
                   var=pd.DataFrame(
                       {'name': ['track1'], 'strand': ['+']}, index=['0']
                   ),
+                  uns={
+                      'variant_scorer': (
+                          variant_scorers.RECOMMENDED_VARIANT_SCORERS['RNA_SEQ']
+                      )
+                  },
               )
           },
       ),
@@ -162,6 +180,12 @@ class AtlasTest(parameterized.TestCase):
                       position=100,
                       reference_bases='A',
                       alternate_bases='T',
+                  ),
+                  interval=dna_model_pb2.Interval(
+                      chromosome='chr1',
+                      start=0,
+                      end=200,
+                      strand=dna_model_pb2.Strand.STRAND_UNSTRANDED,
                   ),
                   scores=[
                       atlas_service_pb2.DenseVariantScore(
@@ -205,12 +229,14 @@ class AtlasTest(parameterized.TestCase):
                           'junction_Start': [100],
                           'junction_End': [200],
                           'variant': [genome.Variant.from_str('chr1:100:A>T')],
+                          'interval': [genome.Interval.from_str('chr1:0-200')],
                       },
                       index=['0'],
                   ),
                   var=pd.DataFrame(
                       {'name': ['track1'], 'strand': ['+']}, index=['0']
                   ),
+                  uns={'scorer': 'scorer1'},
               )
           },
       ),
@@ -223,6 +249,12 @@ class AtlasTest(parameterized.TestCase):
                       position=101,
                       reference_bases='G',
                       alternate_bases='C',
+                  ),
+                  interval=dna_model_pb2.Interval(
+                      chromosome='chr1',
+                      start=0,
+                      end=200,
+                      strand=dna_model_pb2.Strand.STRAND_UNSTRANDED,
                   ),
                   scores=[
                       atlas_service_pb2.DenseVariantScore(
@@ -243,12 +275,16 @@ class AtlasTest(parameterized.TestCase):
               'scorer1': anndata.AnnData(
                   X=np.array([[0]], dtype=np.float32),
                   obs=pd.DataFrame(
-                      {'variant': [genome.Variant.from_str('chr1:101:G>C')]},
+                      {
+                          'variant': [genome.Variant.from_str('chr1:101:G>C')],
+                          'interval': [genome.Interval.from_str('chr1:0-200')],
+                      },
                       index=['0'],
                   ),
                   var=pd.DataFrame(
                       {'name': ['score'], 'strand': ['.']}, index=['0']
                   ),
+                  uns={'scorer': 'scorer1'},
                   layers={'quantiles': np.array([[0.1]], dtype=np.float32)},
               )
           },
@@ -264,6 +300,7 @@ class AtlasTest(parameterized.TestCase):
       np.testing.assert_array_equal(scores.X, expected_scores.X)
       pd.testing.assert_frame_equal(scores.obs, expected_scores.obs)
       pd.testing.assert_frame_equal(scores.var, expected_scores.var)
+      self.assertMappingEqual(scores.uns, expected_scores.uns)
       expected_layers = expected_scores.layers
       assert isinstance(expected_layers, Mapping)
       layers = scores.layers
@@ -350,6 +387,12 @@ class AtlasTest(parameterized.TestCase):
                 position=100 + i,
                 reference_bases='A',
                 alternate_bases='T',
+            ),
+            interval=dna_model_pb2.Interval(
+                chromosome='chr1',
+                start=0,
+                end=200,
+                strand=dna_model_pb2.Strand.STRAND_UNSTRANDED,
             ),
             scores=[
                 atlas_service_pb2.DenseVariantScore(
@@ -459,6 +502,7 @@ class AtlasTest(parameterized.TestCase):
                     genome.Variant.from_str('chr1:101:A>T'),
                     genome.Variant.from_str('chr1:102:A>T'),
                 ],
+                'interval': [genome.Interval.from_str('chr1:0-200')] * 3,
             },
             index=['0', '1', '2'],
         ),

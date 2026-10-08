@@ -25,6 +25,7 @@ from alphagenome.atlas import atlas_utils
 from alphagenome.data import genome
 from alphagenome.data import ontology
 from alphagenome.models.v1 import track_data_utils
+from alphagenome.models.v1 import variant_scorers
 
 from alphagenome.protos import atlas_service_pb2
 from alphagenome.protos import atlas_service_pb2_grpc
@@ -39,6 +40,7 @@ _LIST_DENSE_VARIANT_SCORES_FIELD_MASKS = (
     'interval',
     'next_page_token',
     'variant_scores.variant',
+    'variant_scores.interval',
     'variant_scores.scores.variant_scorer',
     'variant_scores.scores.metadata.gene_scorers',
     'variant_scores.scores.shape',
@@ -50,6 +52,7 @@ _INTERVAL_CHUNK_SIZE = 32
 
 _GET_DENSE_VARIANT_SCORE_FIELD_MASKS = (
     'variant',
+    'interval',
     'scores.variant_scorer',
     'scores.metadata.gene_scorers',
     'scores.shape',
@@ -167,9 +170,14 @@ def convert_variant_scores_to_anndata(
   calibrated_scores_by_scorer = {}
   obs_by_scorer = {}
   var_by_scorer = {}
+  uns_by_scorer = {}
 
   for scores in variant_scores:
     variant = genome.Variant.from_proto(scores.variant)
+    if scores.HasField('interval'):
+      interval = genome.Interval.from_proto(scores.interval)
+    else:
+      interval = None
 
     for score in scores.scores:
       x = np.frombuffer(score.scores, dtype=np.float32).reshape(score.shape)
@@ -192,9 +200,14 @@ def convert_variant_scores_to_anndata(
       if gene_metadata is not None:
         for gene_row in gene_metadata:
           gene_row['variant'] = variant
+          if interval is not None:
+            gene_row['interval'] = interval
         obs_by_scorer[scorer_name].extend(gene_metadata)
       elif x.shape[0] == 1:
-        obs_by_scorer[scorer_name].append({'variant': variant})
+        score_obs: dict[str, Any] = {'variant': variant}
+        if interval is not None:
+          score_obs['interval'] = interval
+        obs_by_scorer[scorer_name].append(score_obs)
 
       if scorer_name not in var_by_scorer:
         if scorer_track_metadata is not None:
@@ -203,6 +216,14 @@ def convert_variant_scores_to_anndata(
             track_metadata := _get_track_metadata(score.metadata)
         ) is not None:
           var_by_scorer[scorer_name] = track_metadata
+
+      if scorer_name not in uns_by_scorer:
+        if variant_scorer := variant_scorers.RECOMMENDED_VARIANT_SCORERS.get(
+            scorer_name
+        ):
+          uns_by_scorer[scorer_name] = {'variant_scorer': variant_scorer}
+        else:
+          uns_by_scorer[scorer_name] = {'scorer': scorer_name}
 
   results = {}
   for scorer_name, scorer_scores in scores_by_scorer.items():
@@ -220,8 +241,9 @@ def convert_variant_scores_to_anndata(
       layers = {'quantiles': np.concatenate(calibrated_scores)}
     var = var_by_scorer[scorer_name]
     var.index = var.index.map(str)
+    uns = uns_by_scorer[scorer_name]
     results[scorer_name] = anndata.AnnData(
-        X=scores, obs=obs, var=var, layers=layers
+        X=scores, obs=obs, var=var, uns=uns, layers=layers
     )
 
   return results
