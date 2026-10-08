@@ -593,7 +593,10 @@ class TrackData:
           raise IndexError('Slice step must be 1 for positional indexing.')
         if position_index != slice(None):
           tdata = tdata.slice_by_positions(
-              position_index.start, position_index.stop
+              0 if position_index.start is None else position_index.start,
+              tdata.width
+              if position_index.stop is None
+              else position_index.stop,
           )
       case genome.Interval():
         tdata = tdata.slice_by_interval(position_index)
