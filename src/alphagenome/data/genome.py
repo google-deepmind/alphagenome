@@ -285,15 +285,18 @@ class Interval:
     return self.start >= 0 and self.end <= reference_length
 
   def truncate(self, reference_length: int = sys.maxsize) -> Self:
-    """Truncates the interval to fit within the valid reference range."""
+    """Truncates the interval to fit within the valid reference range.
+
+    Disjoint intervals become empty intervals at the nearest reference boundary.
+    """
     obj = self.copy()
     if reference_length <= 0:
       raise ValueError('Reference length should be larger than 0.')
     if self.within_reference(reference_length):
       return obj
     else:
-      obj.start = max(self.start, 0)
-      obj.end = min(self.end, reference_length)
+      obj.start = min(max(self.start, 0), reference_length)
+      obj.end = min(max(self.end, 0), reference_length)
       return obj
 
   def center(self, use_strand: bool = True) -> int:
