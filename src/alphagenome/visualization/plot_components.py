@@ -1447,6 +1447,7 @@ class ScoreBar(FeatureContribution):
       max_y_ticks: Maximum number of Y-axis tick divisions (default: 3).
       color: Color to set the bars.
     """
+    # pyrefly: ignore[no-matching-overload]
     scores = np.nansum(adata.X, axis=1, keepdims=True)
     super().__init__(
         anndata.AnnData(X=scores, obs=adata.obs),

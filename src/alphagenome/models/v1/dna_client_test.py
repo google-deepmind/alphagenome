@@ -184,8 +184,10 @@ def _generate_variant_scoring_protos(
     if 'quantiles' in layers:
       quantile_scores = layers['quantiles']
       assert isinstance(quantile_scores, np.ndarray)
+      # pyrefly: ignore[no-matching-overload]
       score_tensor = np.stack([score.X, quantile_scores])
     else:
+      # pyrefly: ignore[bad-index, unsupported-operation]
       score_tensor = score.X[np.newaxis]
 
     tensor_proto, chunks = tensor_utils.pack_tensor(
@@ -237,6 +239,7 @@ def _generate_interval_scoring_protos(
         )
 
     tensor_proto, chunks = tensor_utils.pack_tensor(
+        # pyrefly: ignore[bad-index, unsupported-operation]
         score.X[np.newaxis], bytes_per_chunk=bytes_per_chunk
     )
     yield response_proto_type(
@@ -1653,7 +1656,7 @@ class ClientTest(parameterized.TestCase):
       for score in expected:
         score = score.copy()
         score.uns['variant'] = variant
-        score.X *= variant.position
+        score.X *= variant.position  # pyrefly: ignore[unsupported-operation]
         scores.append(score)
       position_to_expected_scores[variant.position] = scores
 

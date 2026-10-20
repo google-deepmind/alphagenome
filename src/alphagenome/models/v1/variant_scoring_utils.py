@@ -147,7 +147,7 @@ def merge_stranded_gene_tracks(
         negative_track_scores,
     )
 
-  merged_scores = _merge_scores(scores.X)
+  merged_scores = _merge_scores(scores.X)  # pyrefly: ignore[bad-argument-type]
   merged_layers = {}
   for k, v in scores.layers.items():
     if k is not None:
@@ -225,6 +225,7 @@ def unmerge_stranded_gene_tracks(
     result[positive_gene_mask & negative_track_mask] = np.nan
     return result
 
+  # pyrefly: ignore[bad-argument-type]
   unmerged_scores = _unmerge_scores(scores.X)
   unmerged_layers = {}
 

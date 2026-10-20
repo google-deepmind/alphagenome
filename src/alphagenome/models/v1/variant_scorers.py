@@ -729,7 +729,7 @@ def tidy_anndata(
       'junction_Start',
       'junction_End',
   ]
-  if math.prod(adata.X.shape) == 0:
+  if math.prod(adata.X.shape) == 0:  # pyrefly: ignore[missing-attribute]
     # Scores are empty, so we return an empty dataframe.
     return pd.DataFrame()
   elif 'gene_id' in adata.obs and 'strand' in adata.obs:
@@ -741,7 +741,10 @@ def tidy_anndata(
     for col in gene_columns:
       if col not in obs:
         obs[col] = None
-  elif adata.X.shape[0] == 1 and adata.obs.empty:
+  elif (
+      # pyrefly: ignore[missing-attribute]
+      adata.X.shape[0] == 1 and adata.obs.empty
+  ):
     # Scores are for a non-gene-based scorer.
     obs = pd.DataFrame([[None] * len(gene_columns)], columns=gene_columns)
   else:
@@ -792,7 +795,8 @@ def tidy_anndata(
 
   # Formatting final touches.
   df = df.loc[:, id_columns + gene_columns + scorer_columns + track_columns]
-  df['raw_score'] = adata.X.T.reshape((-1,))
+  # pyrefly: ignore[missing-attribute]
+  df['raw_score'] = adata.X.T.reshape((-1))
   layers = adata.layers
   assert isinstance(layers, Mapping)
   if 'quantiles' in layers:
