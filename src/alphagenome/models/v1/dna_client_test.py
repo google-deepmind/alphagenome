@@ -240,7 +240,8 @@ def _generate_interval_scoring_protos(
 
     tensor_proto, chunks = tensor_utils.pack_tensor(
         # pyrefly: ignore[bad-index, unsupported-operation]
-        score.X[np.newaxis], bytes_per_chunk=bytes_per_chunk
+        score.X[np.newaxis],
+        bytes_per_chunk=bytes_per_chunk,
     )
     yield response_proto_type(
         output=dna_model_pb2.ScoreIntervalOutput(

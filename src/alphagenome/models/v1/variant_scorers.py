@@ -743,7 +743,8 @@ def tidy_anndata(
         obs[col] = None
   elif (
       # pyrefly: ignore[missing-attribute]
-      adata.X.shape[0] == 1 and adata.obs.empty
+      adata.X.shape[0] == 1
+      and adata.obs.empty
   ):
     # Scores are for a non-gene-based scorer.
     obs = pd.DataFrame([[None] * len(gene_columns)], columns=gene_columns)
