@@ -46,7 +46,7 @@ jobs=4
 unsafe-load-any-extension=no
 
 # Minimum Python version to use for version dependent checks.
-py-version=3.10
+py-version=3.11
 
 
 [MESSAGES CONTROL]
