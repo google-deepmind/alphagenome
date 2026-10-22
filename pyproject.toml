@@ -28,6 +28,7 @@ classifiers=[
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
 ]
 dependencies=[
@@ -107,7 +108,7 @@ MPLBACKEND = 'agg'
 
 [[tool.hatch.envs.hatch-test.matrix]]
 # Use hatch test --all to run tests on all supported Python versions.
-python = ['3.13', '3.12', '3.11']
+python = ['3.14', '3.13', '3.12', '3.11']
 
 [tool.hatch.envs.check]
 dependencies = [
