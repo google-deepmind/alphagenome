@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0]
+
+### Changed
+
+-   Removed support for Python 3.10, which is now end-of-life, and officially
+    added support for Python 3.14.
+-   Updated imports to use stable v1 directory, in preparation for removing the
+    previous locations in a future release.
+
 ## [0.10.0]
 
 ### Added
