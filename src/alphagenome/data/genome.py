@@ -590,7 +590,17 @@ class Interval:
   def binary_mask_stranded(
       self, intervals: Sequence[Self], bin_size: int = 1
   ) -> np.ndarray:
-    """Boolean mask True if any interval overlaps the bin: coverage > 0."""
+    """Stranded boolean mask that is True where any interval overlaps the bin.
+
+    Args:
+      intervals: Sequence of intervals possibly overlapping self.
+      bin_size: Resolution at which to bin the output mask.
+
+    Returns:
+      Boolean mask of shape `(self.width // bin_size, 2)`, True where
+      `coverage_stranded > 0`. Column 0 refers to intervals on the same strand
+      as self, and column 1 to intervals on the opposite strand.
+    """
     return self.coverage_stranded(intervals, bin_size=bin_size) > 0
 
 

@@ -1,6 +1,6 @@
 # Atlas
 
-Libraries for querying intervals/variants from the AlphaGenome Atlas API.
+Client for querying precomputed AlphaGenome Atlas variant and interval scores.
 
 ## AtlasClient
 

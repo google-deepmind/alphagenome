@@ -456,7 +456,7 @@ class Transcript:
       ignore_info: bool = True,
       fix_truncation: bool = False,
   ) -> 'Transcript':
-    """Initialises Trancript object from a given transcript dataframe.
+    """Initializes a `Transcript` object from a transcript DataFrame.
 
     Args:
       transcript_df: Dataframe representing a transcript. The dataframe must
@@ -466,7 +466,7 @@ class Transcript:
       fix_truncation: Whether or not apply truncation fixation to CDS.
 
     Returns:
-      Initialised Transcript object.
+      Initialized Transcript object.
 
     Raises:
       ValueError: if the dataframe provided is invalid (no or more than one
@@ -689,10 +689,10 @@ class _RangeExtractor:
 
 
 class TranscriptExtractor:
-  """Transcript extractor from gtf."""
+  """Transcript extractor from a GTF DataFrame."""
 
   def __init__(self, gtf_df: pd.DataFrame) -> None:
-    """Init.
+    """Initializes the extractor from a GTF DataFrame.
 
     Args:
       gtf_df: pd.DataFrame of GENCODE GTF entries containing transcript

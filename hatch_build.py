@@ -30,6 +30,8 @@ _ALPHAGENOME_PROTOS = (
     'alphagenome/protos/dna_model.proto',
     'alphagenome/protos/dna_model_service.proto',
     'alphagenome/protos/tensor.proto',
+    'alphagenome/protos/v2/dna_model.proto',
+    'alphagenome/protos/v2/dna_model_service.proto',
 )
 
 

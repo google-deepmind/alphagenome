@@ -2,11 +2,11 @@
 
 Classes and utilities for manipulating genomics data.
 
-## Fold Intervals
-
 ```{eval-rst}
 .. currentmodule:: alphagenome
 ```
+
+## Fold intervals
 
 ```{eval-rst}
 
@@ -22,18 +22,19 @@ Classes and utilities for manipulating genomics data.
 ## Genome
 
 ```{eval-rst}
-.. currentmodule:: alphagenome
-```
-
-```{eval-rst}
 
 .. autosummary::
     :toctree: generated
 
     data.genome.Strand
+    data.genome.VariantFormat
     data.genome.Interval
     data.genome.Variant
     data.genome.Junction
+    data.genome.normalize_variant
+    data.genome.intersect_intervals
+    data.genome.merge_overlapping_intervals
+    data.genome.union_intervals
 ```
 
 ## Gene annotation
@@ -52,6 +53,17 @@ Classes and utilities for manipulating genomics data.
     data.gene_annotation.filter_transcript_support_level
     data.gene_annotation.get_gene_interval
     data.gene_annotation.get_gene_intervals
+```
+
+## FASTA Extractor
+
+```{eval-rst}
+
+.. autosummary::
+    :toctree: generated
+
+    io.fasta.FastaExtractor
+    io.fasta.reverse_complement
 ```
 
 ## Junction data
@@ -74,6 +86,8 @@ Classes and utilities for manipulating genomics data.
 
     data.ontology.OntologyType
     data.ontology.OntologyTerm
+    data.ontology.from_curie
+    data.ontology.from_curies
 ```
 
 ## Track data
@@ -83,9 +97,21 @@ Classes and utilities for manipulating genomics data.
 .. autosummary::
     :toctree: generated
 
+    data.track_data.AggregationType
     data.track_data.TrackData
     data.track_data.concat
     data.track_data.interleave
+```
+
+## Gene expression data
+
+```{eval-rst}
+
+.. autosummary::
+    :toctree: generated
+
+    data.gene_expression_data.GeneExpressionData
+    data.gene_expression_data.concat
 ```
 
 ## Transcript

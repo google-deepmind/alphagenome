@@ -31,8 +31,10 @@ import os
 import sys
 
 # The package is installed by Readthedocs before sphinx building.
-import alphagenome  # pylint: disable=unused-import, g-import-not-at-top
-import alphagenome.models.dna_client  # pylint: disable=unused-import, g-import-not-at-top
+import alphagenome
+from IPython.lib.lexers import IPython3Lexer  # pylint: disable=g-importing-member
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '_ext'))
 
 # -- Project information -----------------------------------------------------
 
@@ -67,9 +69,9 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx.ext.coverage',
     'sphinx_copybutton',
-    'sphinx_remove_toctrees',
     'sphinx_reredirects',
     'sphinx.ext.linkcode',
+    'autolink',
 ]
 
 autosummary_generate = True
@@ -83,12 +85,8 @@ napoleon_use_rtype = True
 napoleon_use_param = True
 myst_heading_anchors = 6  # Create heading anchors for h1-h6
 autodoc_mock_imports = [
-    'google.protobuf.runtime_version',
-    'google.protobuf.internal.builder',
     'absl',
-    'alphagenome.protos',
 ]
-remove_from_toctrees = ['api/generated/*']
 bibtex_bibfiles = ['refs.bib']
 
 myst_enable_extensions = [
@@ -109,6 +107,18 @@ nb_output_stderr = 'remove'
 nb_execution_mode = 'off'
 nb_merge_streams = True
 typehints_defaults = 'braces'
+_PUBLIC_MODULE_ALIASES = {
+    'pandas.core.frame': 'pandas',
+    'pandas.core.series': 'pandas',
+    'anndata._core.anndata': 'anndata',
+}
+
+
+def typehints_fixup_module_name(module):
+  return _PUBLIC_MODULE_ALIASES.get(module, module)
+
+
+suppress_warnings = ['config.cache']
 
 source_suffix = {
     '.rst': 'restructuredtext',
@@ -138,8 +148,20 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'protos']
 autodoc_default_options = {
     'member-order': 'bysource',
     'special-members': True,
-    'exclude-members': '__repr__, __str__, __weakref__',
+    'exclude-members': '__repr__, __str__, __weakref__, __lt__',
 }
+# Append custom `__init__` docstrings to the class docstring.
+autoclass_content = 'both'
+# jaxtyping annotations (e.g. `Float32[ndarray, 'S A']`) have no API page.
+nitpick_ignore_regex = [
+    ('py:class', r'jaxtyping\..*'),
+    # Protobuf messages and wrappers that appear in signatures are not part of
+    # the documented API.
+    ('py:class', r'alphagenome\.protos\..*'),
+    ('py:class', r'google\.protobuf\..*'),
+    # Private helper types, for example genome._FastaExtractorType.
+    ('py:class', r'alphagenome\..*\._\w+'),
+]
 
 
 # -- Source code links -----------------------------------------------------
@@ -177,8 +199,43 @@ def linkcode_resolve(domain, info):
   path = os.path.relpath(filename, start=os.path.dirname(alphagenome.__file__))
   return (
       f'{repository_url}/tree/main/src/{project}/'
-      f'{path}#L{lineno}#L{lineno + len(source) - 1}'
+      f'{path}#L{lineno}-L{lineno + len(source) - 1}'
   )
+
+
+_HIDDEN_MEMBERS = frozenset({
+    'from_proto',
+    'to_proto',
+    'from_pyranges_dict',
+    'to_pyranges_dict',
+    'pad_inplace',
+    'resize_inplace',
+})
+
+
+def _skip_member(app, what, name, obj, skip, options):
+  """Hides serialization helpers and builtin C methods on IntEnum classes."""
+  del app, what, skip, options
+  if name in _HIDDEN_MEMBERS:
+    return True
+  if inspect.isroutine(obj) and not getattr(obj, '__module__', None):
+    return True
+  return None
+
+
+def _mark_unlisted_nosearch(app, env):
+  """Excludes unlisted AlphaGenome 1 notebooks from the search index."""
+  del app
+  for docname in env.toctree_includes.get(
+      'tutorials/alphagenome1_notebooks', ()
+  ):
+    env.metadata[docname]['nosearch'] = True
+
+
+def setup(app):
+  app.add_lexer('python', IPython3Lexer)
+  app.connect('autodoc-skip-member', _skip_member)
+  app.connect('env-check-consistency', _mark_unlisted_nosearch)
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -196,13 +253,22 @@ html_theme_options = {
     'launch_buttons': {
         'colab_url': 'https://colab.research.google.com',
     },
-    'article_header_start': ['toggle-primary-sidebar.html', 'breadcrumbs'],
+    'max_navbar_depth': 5,
+    'show_toc_level': 2,
     'show_prev_next': False,
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_static_path = ['_static']
+html_css_files = [
+    (
+        'https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500'
+        '&family=Google+Sans+Text:wght@400;500&family=Roboto+Mono:wght@400;500'
+        '&display=swap'
+    ),
+    'custom.css',
+]
 
 # Redirects for moved pages, handled by sphinx_reredirects. Maps old docnames
 # (without .html extension) to targets relative to the old page's directory.
@@ -217,4 +283,5 @@ redirects = {
     'colabs/tissue_ontology_mapping': 'v1/tissue_ontology_mapping.html',
     'colabs/variant_scoring_ui': 'v1/variant_scoring_ui.html',
     'colabs/visualization_modality_tour': 'v1/visualization_modality_tour.html',
+    'visualization_library_basics': 'visualization_basics.html',
 }

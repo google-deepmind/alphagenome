@@ -294,7 +294,22 @@ class AtlasClient:
       gene_ids: Sequence[str] | None = None,
       gene_names: Sequence[str] | None = None,
   ) -> Mapping[str, anndata.AnnData]:
-    """Returns the scores for a single Variant within an Interval."""
+    """Returns the scores for a single Variant.
+
+    Args:
+      variant: Variant to query.
+      requested_scorers: Names of the variant scorers to retrieve.
+      ontology_terms: Optional ontology terms (or CURIE strings) used to filter
+        tracks.
+      gene_ids: Optional Ensembl gene IDs used to filter gene-level scores.
+      gene_names: Optional gene symbols used to filter gene-level scores.
+
+    Returns:
+      Mapping from scorer name to an `AnnData` of variant scores, with raw
+      scores in `.X`, variant and gene metadata in `.obs`, track metadata in
+      `.var`, scorer information in `.uns` and, when available, calibrated
+      scores in the `'quantiles'` layer.
+    """
     request = atlas_service_pb2.GetDenseVariantScoresRequest(
         variant=variant.to_proto(),
         organism=dna_model_pb2.ORGANISM_HOMO_SAPIENS,
@@ -322,7 +337,23 @@ class AtlasClient:
       progress_bar: bool = True,
       max_workers: int = DEFAULT_MAX_WORKERS,
   ) -> Mapping[str, anndata.AnnData]:
-    """Returns the scores for a single Variant within an Interval."""
+    """Returns the scores for multiple Variants.
+
+    Args:
+      variants: Variants to query.
+      requested_scorers: Names of the variant scorers to retrieve.
+      ontology_terms: Optional ontology terms (or CURIE strings) used to filter
+        tracks.
+      gene_ids: Optional Ensembl gene IDs used to filter gene-level scores.
+      gene_names: Optional gene symbols used to filter gene-level scores.
+      progress_bar: Whether to show a progress bar.
+      max_workers: Maximum number of concurrent requests.
+
+    Returns:
+      Mapping from scorer name to an `AnnData` of variant scores, with one
+      observation per variant (or per variant and gene for gene-level scorers).
+      See `query_variant` for the layout.
+    """
 
     filter_query = atlas_utils.build_filter(
         requested_scorers=requested_scorers,
@@ -378,7 +409,23 @@ class AtlasClient:
       progress_bar: bool = True,
       max_workers: int = DEFAULT_MAX_WORKERS,
   ) -> Mapping[str, anndata.AnnData]:
-    """Returns the scores for all Variants within an Interval."""
+    """Returns the scores for all Variants within an Interval.
+
+    Args:
+      interval: Genomic interval to query. Scores are returned for all single
+        nucleotide variants within the interval.
+      requested_scorers: Names of the variant scorers to retrieve.
+      ontology_terms: Optional ontology terms (or CURIE strings) used to filter
+        tracks.
+      gene_ids: Optional Ensembl gene IDs used to filter gene-level scores.
+      gene_names: Optional gene symbols used to filter gene-level scores.
+      progress_bar: Whether to show a progress bar.
+      max_workers: Maximum number of concurrent requests.
+
+    Returns:
+      Mapping from scorer name to an `AnnData` of variant scores. See
+      `query_variant` for the layout.
+    """
 
     intervals = []
     for position in range(0, interval.width, _INTERVAL_CHUNK_SIZE):
@@ -482,7 +529,7 @@ def create(
     address: Optional server address to connect to.
 
   Returns:
-   `DnaClient` instance.
+    `AtlasClient` instance.
   """
   address = address or 'dns:///gdmscience.googleapis.com:443'
   service_config = (

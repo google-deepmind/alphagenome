@@ -1,0 +1,22 @@
+{
+  "methodConfig": [
+    {
+      "name": [
+        {
+          "service": "google.gdm.gdmscience.alphagenome.v2main.DnaModelServiceV2"
+        }
+      ],
+      "timeout": "60s",
+      "retryPolicy": {
+        "maxAttempts": 5,
+        "initialBackoff": "1.25s",
+        "maxBackoff": "60s",
+        "backoffMultiplier": 1.5,
+        "retryableStatusCodes": [
+          "RESOURCE_EXHAUSTED",
+          "UNAVAILABLE"
+        ]
+      }
+    }
+  ]
+}

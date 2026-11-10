@@ -501,8 +501,8 @@ def sashimi_plot(
     junctions: Splice junctions to plot.
     ax: Matplotlib axis to add the plot to.
     interval: Interval to plot, used to filter text annotations.
-    filter_threshold: Junctions with number of reads below this threshold will
-      be filtered out.
+    filter_threshold: Junctions whose read count (`junction.k`) is None or below
+      this threshold are filtered out.
     annotate_counts: Whether to annotate the junctions with read counts.
     rng: Optional random number generator to use for jittering junction paths.
       If unset will use NumPy's default random number generator.
@@ -572,3 +572,186 @@ def pad_track(track: np.ndarray, new_len: int, value: int = 0) -> np.ndarray:
   j = i + len(track)
   out[i:j] = track
   return out
+
+
+_ColorType = (
+    str | tuple[float, float, float] | tuple[float, float, float, float]
+)
+_ARC_MIN_HEIGHT = 0.35
+_ARC_SPAN_SCALE = 1.5
+_ARC_BEZIER_PEAK_SCALE = 4.0 / 3.0
+_ARC_Y_LIM_LOW = -0.05
+_ARC_Y_LIM_HIGH = 1.08
+
+
+def _numeric_col(df: pd.DataFrame, col: str) -> np.ndarray:
+  """Extracts `df[col]` as a float64 array, mapping missing values to `NaN`."""
+  return df[col].to_numpy(dtype=np.float64, na_value=np.nan)
+
+
+def _normalize_arc_scores(
+    raw_scores: np.ndarray, vmin: float | None, vmax: float | None
+) -> np.ndarray:
+  """Normalizes enhancer scores to `[0, 1]`, mapping mixed NaN values to `0`."""
+  finite_mask = np.isfinite(raw_scores)
+  if not np.any(finite_mask):
+    return np.ones(raw_scores.shape[0], dtype=np.float64)
+  finite_vals = raw_scores[finite_mask]
+  s_min = min(0.0, float(finite_vals.min())) if vmin is None else float(vmin)
+  s_max = float(finite_vals.max()) if vmax is None else float(vmax)
+  safe = np.where(finite_mask, raw_scores, s_min)
+  if s_max > s_min:
+    clipped = np.clip((safe - s_min) / (s_max - s_min), 0.0, 1.0)
+    return np.where(finite_mask, clipped, 0.0)
+  cond = safe > 0.0 if vmin is None and vmax is None else safe >= s_min
+  return np.where(finite_mask & cond, 1.0, 0.0)
+
+
+def enhancer_arcs_plot(
+    links: pd.DataFrame,
+    ax: mpl.axes.Axes | None = None,
+    tss: int | None = None,
+    *,
+    interval: genome.Interval | None = None,
+    interval_contained: bool = True,
+    gene_id: str | None = None,
+    start_col: str = 'start',
+    end_col: str = 'end',
+    peak_col: str | None = None,
+    tss_col: str = 'tss',
+    score_col: str | None = 'gradient_score',
+    color: _ColorType = '#810f7c',
+    cmap: str | mpl.colors.Colormap | None = None,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    alpha_range: tuple[float, float] = (0.35, 0.9),
+    linewidth_range: tuple[float, float] = (1.0, 2.6),
+    upward: bool = True,
+) -> None:
+  """Plots enhancer-to-gene links as cubic Bezier arcs on `ax`.
+
+  Args:
+    links: DataFrame of enhancer-to-gene links.
+    ax: Matplotlib axis to draw on (defaults to `plt.gca()`).
+    tss: Target gene TSS coordinate; if None, uses `tss_col` from `links`.
+    interval: Optional genomic interval filter and horizontal span reference.
+    interval_contained: If True, only plot arcs whose endpoints both lie within
+      `interval`; if False, plot any arc whose enhancer-to-TSS span overlaps
+      `interval`. Ignored when `interval` is None.
+    gene_id: Optional target gene ID filter (ignoring Ensembl version suffix).
+    start_col: Column name for enhancer start coordinate.
+    end_col: Column name for enhancer end coordinate.
+    peak_col: Optional summit column name; if None, uses `0.5 * (start + end)`.
+    tss_col: Column name for target gene TSS when `tss` is None.
+    score_col: Column used to scale arc opacity, width, and colormap shading.
+    color: Default arc color when `cmap` is None.
+    cmap: Optional colormap for shading arcs by score.
+    vmin: Optional minimum score for normalization.
+    vmax: Optional maximum score for normalization.
+    alpha_range: Minimum and maximum alpha transparency for arcs.
+    linewidth_range: Minimum and maximum line width for arcs.
+    upward: If True, arcs curve upward; otherwise downward.
+
+  Raises:
+    ValueError: If `tss` is None and `tss_col` is not in `links`.
+    KeyError: If required coordinate, gene, peak, or score columns are missing
+      from `links`.
+  """
+  if tss is None and tss_col not in links.columns:
+    raise ValueError(
+        f'Either `tss` must be provided or `{tss_col}` must be in `links`.'
+    )
+
+  ax = ax if ax is not None else plt.gca()
+  ax.axhline(0.0, color='#bdbdbd', linewidth=0.6, zorder=1)
+  y_scale = 1.0 if upward else -1.0
+
+  if gene_id is not None:
+    gene_ids = links['gene_id'].astype(str).str.split('.', n=1).str[0]
+    gene_df = links[gene_ids == gene_id.split('.', 1)[0]]
+  else:
+    gene_df = links
+
+  starts = _numeric_col(gene_df, start_col)
+  midpoints = 0.5 * (starts + _numeric_col(gene_df, end_col))
+  if peak_col is not None:
+    peaks = _numeric_col(gene_df, peak_col)
+    enh_vals = np.where(np.isfinite(peaks), peaks, midpoints)
+  else:
+    enh_vals = midpoints
+  if tss is not None:
+    tss_vals = np.full(len(gene_df), float(tss))
+  else:
+    tss_vals = _numeric_col(gene_df, tss_col)
+  scores = None if score_col is None else _numeric_col(gene_df, score_col)
+
+  finite = np.isfinite(enh_vals) & np.isfinite(tss_vals)
+  if interval is not None:
+    v0 = float(interval.start)
+    v1 = float(interval.end)
+    arc_lo = np.minimum(enh_vals, tss_vals)
+    arc_hi = np.maximum(enh_vals, tss_vals)
+    contained = (arc_lo >= v0) & (arc_hi <= v1)
+    in_span = (
+        contained
+        if interval_contained
+        else contained | ((arc_lo < v1) & (arc_hi > v0))
+    )
+    if 'chromosome' in gene_df.columns:
+      same_chr = gene_df['chromosome'] == interval.chromosome
+      in_chrom = same_chr.to_numpy(dtype=bool, na_value=False)
+    else:
+      in_chrom = True
+    keep = finite & in_span & in_chrom
+  else:
+    keep = finite
+
+  enh_positions = enh_vals[keep]
+  tss_positions = tss_vals[keep]
+  if enh_positions.size > 0:
+    if scores is not None:
+      norm_scores = _normalize_arc_scores(scores[keep], vmin, vmax)
+    else:
+      norm_scores = np.ones(enh_positions.size, dtype=np.float64)
+    span = (
+        float(interval.width)
+        if interval is not None
+        else float(np.ptp(np.concatenate([enh_positions, tss_positions])))
+    )
+    max_span = max(span, 1.0)
+
+    colormap = plt.get_cmap(cmap) if isinstance(cmap, str) else cmap
+    codes = [mpl.path.Path.MOVETO] + [mpl.path.Path.CURVE4] * 3
+    min_alpha, max_alpha = alpha_range
+    min_linewidth, max_linewidth = linewidth_range
+    for enh_x, tss_x, score in zip(
+        enh_positions.tolist(), tss_positions.tolist(), norm_scores.tolist()
+    ):
+      span_frac = min(1.0, abs(enh_x - tss_x) / max_span * _ARC_SPAN_SCALE)
+      apex = _ARC_MIN_HEIGHT + (1.0 - _ARC_MIN_HEIGHT) * span_frac
+      y_ctrl = y_scale * _ARC_BEZIER_PEAK_SCALE * apex
+      verts = [
+          (tss_x, 0.0),
+          (tss_x + 0.25 * (enh_x - tss_x), y_ctrl),
+          (tss_x + 0.75 * (enh_x - tss_x), y_ctrl),
+          (enh_x, 0.0),
+      ]
+      ax.add_patch(
+          mpl.patches.PathPatch(
+              mpl.path.Path(verts, codes),
+              facecolor='none',
+              edgecolor=colormap(score) if colormap is not None else color,
+              alpha=min_alpha + score * (max_alpha - min_alpha),
+              linewidth=min_linewidth + score * (max_linewidth - min_linewidth),
+              zorder=2 + score,
+          )
+      )
+
+  if interval is not None:
+    ax.set_xlim(interval.start, interval.end)
+  elif enh_positions.size > 0:
+    ax.autoscale_view(scalex=True, scaley=False)
+  if upward:
+    ax.set_ylim(_ARC_Y_LIM_LOW, _ARC_Y_LIM_HIGH)
+  else:
+    ax.set_ylim(-_ARC_Y_LIM_HIGH, -_ARC_Y_LIM_LOW)

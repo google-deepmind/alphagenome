@@ -1,12 +1,12 @@
-# API
+# API reference
 
 ```{toctree}
-:maxdepth: 1
+:maxdepth: 4
 :hidden:
 
+models
 atlas
 data
-models
 interpretation
 visualization
 ```
@@ -16,11 +16,18 @@ visualization
 ::::{grid} 1 1 2 3
 :gutter: 2
 
+:::{grid-item-card} Models
+:link: models
+:link-type: doc
+
+Clients, endpoints and scorers for AlphaGenome 2 and AlphaGenome 1.
+:::
+
 :::{grid-item-card} Atlas
 :link: atlas
 :link-type: doc
 
-Classes and utilities for the AlphaGenome Atlas API.
+Client for querying precomputed AlphaGenome Atlas variant and interval scores.
 :::
 
 :::{grid-item-card} Data
@@ -30,25 +37,20 @@ Classes and utilities for the AlphaGenome Atlas API.
 Classes and utilities for manipulating genomics data.
 :::
 
-:::{grid-item-card} Models
-:link: models
-:link-type: doc
-
-Classes related to the AlphaGenome model API and variant scorers.
-:::
-
 :::{grid-item-card} Interpretation
 :link: interpretation
 :link-type: doc
 
-Sequence interpretation tools (like in silico mutagenesis).
+Helpers for in silico mutagenesis (ISM) and enhancer-to-gene (E2G) scoring.
 :::
 
 :::{grid-item-card} Visualization
 :link: visualization
 :link-type: doc
 
-Visualization and plotting tools.
+Plotting tools for AlphaGenome outputs.
 :::
+
+::::
 
 <!-- mdformat on -->

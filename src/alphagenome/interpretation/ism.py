@@ -70,13 +70,13 @@ def ism_matrix(
   """Construct the ISM (position, base) matrix from individual ISM scores.
 
   This function returns the relative effect of the variants compared to the
-  per-position average: score[position, base] - mean(score[position, :]]).
+  per-position average: score[position, base] - mean(score[position, :]).
 
   Args:
     variant_scores: Variant effect scores corresponding to the variants. These
       could be obtained from the score_variants() output summarised to a single
-      scalar. Summarisation could be for example be obtained by selecting a
-      specific variant scorer output and extract a specific value from the
+      scalar. Summarisation could, for example, be obtained by selecting a
+      specific variant scorer output and extracting a specific value from the
       (variant, track) matrix.
     variants: Sequence of variants used to transform into the ISM matrix.
     interval: Interval for which to get the contribution scores. All variants

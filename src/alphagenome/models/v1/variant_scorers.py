@@ -174,7 +174,8 @@ class CenterMaskScorer:
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -260,7 +261,8 @@ class ContactMapScorer:
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -306,7 +308,8 @@ class GeneMaskLFCScorer:
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -365,7 +368,8 @@ class GeneMaskActiveScorer:
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -413,19 +417,22 @@ class GeneMaskActiveScorer:
 class GeneMaskSplicingScorer:
   """Variant scorer for gene-mask scoring for splicing.
 
-  Variant scorer that quantifies changes in class assignment probabilties
-  (dna_output.OutputType.SPLICE_SITES) or changes in the usage of splice sites
-  (dna_output.OutputType.SPLICE_SITE_USAGE) between ALT and REF alleles using
-  a gene exon mask.
+  Variant scorer that quantifies changes in class assignment probabilities
+  (`dna_output.OutputType.SPLICE_SITES`) or changes in the usage of splice sites
+  (`dna_output.OutputType.SPLICE_SITE_USAGE`) between `ALT` and `REF` alleles
+  using a gene body mask (exons and introns).
 
   Attributes:
-    requested_output: The requested output type (e.g. ATAC, DNASE, etc.)
-    width: The width of the mask around the variant.
+    requested_output: The requested output type (`SPLICE_SITES` or
+      `SPLICE_SITE_USAGE`).
+    width: The width of the mask around the variant, or `None` for the full gene
+      body.
     base_variant_scorer: The base variant scorer.
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -493,7 +500,8 @@ class PolyadenylationScorer:
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -534,7 +542,8 @@ class SpliceJunctionScorer:
     name: The name of the scorer (a composite of the above attributes that
       uniquely identifies a scorer combination).
     is_signed: Whether this variant scorer is directional (such that scores may
-      be negative or positive) or non-directional (scores are always positive).
+      be negative or positive) or non-directional (scores are always
+      non-negative).
 
   Methods:
     to_proto: Converts the scorer to its corresponding proto message.
@@ -820,10 +829,11 @@ def tidy_scores(
 ) -> pd.DataFrame | None:
   """Formats scores into a tidy (long) pandas DataFrame.
 
-  This function reformats variant scores into a more readable DataFrame with one
-  score per row. This function supports both scores generated from variant
-  scorers (e.g., the output of `score_variant` or `score_variants`) or interval
-  scorers (e.g., the output of `score_interval` or `score_intervals`).
+  This function reformats variant or interval scores into a more readable
+  DataFrame with one score per row. This function supports both scores generated
+  from variant scorers (e.g., the output of `score_variant` or `score_variants`)
+  or interval scorers (e.g., the output of `score_interval` or
+  `score_intervals`).
 
   It handles both variant/interval-centric scoring (producing one score row per
   variant/interval-track pair) and gene-centric scoring (one score row per

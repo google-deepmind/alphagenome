@@ -151,8 +151,9 @@ def filter_transcript_type(
 ) -> pd.DataFrame:
   """Filter GTF entries by transcript types.
 
-  This function takes a GTF DataFrame and a list of transcript types and returns
-  a new DataFrame containing only the transcripts with the specified types.
+  This function takes a GTF DataFrame and a tuple of transcript types and
+  returns a new DataFrame containing only the transcripts with the specified
+  types.
 
   The GTF DataFrame must contain a column named 'transcript_type' or
   'transcript_biotype'. The function will raise a ValueError if neither of these
@@ -160,7 +161,8 @@ def filter_transcript_type(
 
   Args:
     gtf: pd.DataFrame or pyranges.PyRanges.
-    transcript_types: List of valid transcript types to use for filtering.
+    transcript_types: Tuple of transcript types to keep. If None, `gtf` is
+      returned unfiltered.
 
   Returns:
     pd.DataFrame of GENCODE GTF entries subset to rows with the requested
@@ -180,17 +182,23 @@ def filter_transcript_type(
 def filter_protein_coding(
     gtf: pd.DataFrame, include_gene_entries: bool = False
 ) -> pd.DataFrame:
-  """Filter GTF entries to only protein-coding genes.
+  """Filter GTF entries to protein-coding transcripts or genes.
+
+  By default, keeps the entries of protein-coding transcripts (filtering on the
+  transcript type). If `include_gene_entries` is True, keeps all entries of
+  protein-coding genes, including gene entries (filtering on the gene type).
 
   Args:
     gtf: pd.DataFrame of GENCODE GTF entries. This data frame must contain a
-      column named 'transcript_type' or 'transcript_biotype'.
+      column named 'transcript_type' or 'transcript_biotype', or a column named
+      'gene_type' if `include_gene_entries` is True.
     include_gene_entries: Whether to include gene entries in addition to
-      transcript entries.
+      transcript entries. If True, filters on 'gene_type' instead of the
+      transcript type.
 
   Returns:
     pd.DataFrame of GENCODE GTF entries subset to rows with protein-coding
-    genes.
+    transcripts, or with protein-coding genes if `include_gene_entries` is True.
   """
   if include_gene_entries:
     if 'gene_type' in gtf.columns:

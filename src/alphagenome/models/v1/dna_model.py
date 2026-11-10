@@ -121,7 +121,7 @@ class DnaModel(metaclass=abc.ABCMeta):
       max_workers: int = DEFAULT_MAX_WORKERS,
       intervals: Sequence[genome.Interval] | None = None,
   ) -> list[dna_output.Output]:
-    """Generate predictions for a given DNA sequence.
+    """Generate predictions for a sequence of DNA sequences.
 
     Args:
       sequences: DNA sequences to make predictions for.
@@ -276,7 +276,7 @@ class DnaModel(metaclass=abc.ABCMeta):
       progress_bar: bool = True,
       max_workers: int = DEFAULT_MAX_WORKERS,
   ) -> list[dna_output.VariantOutput]:
-    """Generate predictions for a given DNA variant.
+    """Generate predictions for a sequence of DNA variants.
 
     Args:
       intervals: DNA interval(s) to make predictions for.

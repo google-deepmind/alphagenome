@@ -1,0 +1,329 @@
+// Copyright 2025 Google LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package google.gdm.gdmscience.alphagenome.v2main;
+
+import "alphagenome/protos/v1/dna_model.proto";
+import "alphagenome/protos/v2/dna_model.proto";
+
+option go_package = "google.golang.org/genproto/googleapis/gdm/gdmscience/alphagenome/v2main;alphagenome";
+option java_multiple_files = true;
+option java_outer_classname = "DnaModelServiceProto";
+option java_package = "com.google.gdm.gdmscience.alphagenome.v2main";
+
+// Service for making predictions with DNA models.
+service DnaModelServiceV2 {
+  // Makes a prediction for DNA sequence.
+  rpc PredictSequence(PredictSequenceRequest)
+      returns (PredictSequenceResponse) {}
+
+  // Make prediction for a single genomic interval.
+  rpc PredictInterval(PredictIntervalRequest)
+      returns (PredictIntervalResponse) {}
+
+  // Predict variant effects for a genomic interval.
+  rpc PredictVariant(PredictVariantRequest) returns (PredictVariantResponse) {}
+
+  // Score a genomic interval.
+  rpc ScoreInterval(ScoreIntervalRequest) returns (ScoreIntervalResponse) {}
+
+  // Score a variant for a genomic interval.
+  rpc ScoreVariant(ScoreVariantRequest) returns (ScoreVariantResponse) {}
+
+  // Score ISM variant effect predictions for a genomic interval.
+  rpc ScoreIsmVariant(ScoreIsmVariantRequest)
+      returns (ScoreIsmVariantResponse) {}
+
+  // Get metadata for all tracks observed by the model.
+  rpc GetObservedMetadata(ObservedMetadataRequest)
+      returns (ObservedMetadataResponse) {}
+
+  // Get supported conditions and details of the available modalities.
+  rpc GetSupportedConditions(SupportedConditionsRequest)
+      returns (SupportedConditionsResponse) {}
+
+  // Encode cells into latent embeddings using the cell encoder.
+  rpc EncodeCells(EncodeCellsRequest) returns (EncodeCellsResponse) {}
+
+  // Predict input sequence gradients for a genomic interval.
+  rpc PredictIntervalGradients(PredictIntervalGradientsRequest)
+      returns (PredictIntervalGradientsResponse) {}
+}
+
+// Request message for predicting a sequence.
+message PredictSequenceRequest {
+  // Required. DNA sequence to make prediction for. Must only contain characters
+  // "ACGTN".
+  string sequence = 1;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 2;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 3;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 6;
+  }
+
+  // Output types to generate predictions for.
+  repeated OutputType requested_outputs = 4;
+
+  // Optional model version to use.
+  string model_version = 5;
+}
+
+// Response message for predicting a sequence.
+message PredictSequenceResponse {
+  // The outputs for each requested output type.
+  repeated Output outputs = 1;
+}
+
+// Request message for predicting an interval.
+message PredictIntervalRequest {
+  // DNA interval to make prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 2;
+
+  // Output types to generate predictions for.
+  repeated OutputType requested_outputs = 3;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 4;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 6;
+  }
+
+  // Optional model version to use.
+  string model_version = 5;
+}
+
+message PredictIntervalResponse {
+  // The outputs for each requested output type.
+  repeated Output outputs = 1;
+}
+
+// Request message for scoring an interval.
+message ScoreIntervalRequest {
+  // DNA interval to make prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 2;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 3;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 6;
+  }
+
+  // Interval scorers to use for the prediction.
+  repeated IntervalScorer interval_scorers = 4;
+
+  // Optional model version to use.
+  string model_version = 5;
+}
+
+// Response message for scoring an interval.
+message ScoreIntervalResponse {
+  // Score interval outputs for each interval scorer.
+  repeated ScoreIntervalOutput outputs = 1;
+}
+
+// Request message for predicting a variant.
+message PredictVariantRequest {
+  // DNA interval to make prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // DNA variant to make prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Variant variant = 2;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 3;
+
+  // Output types to generate predictions for.
+  repeated OutputType requested_outputs = 4;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 5;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 7;
+  }
+
+  // Optional model version to use.
+  string model_version = 6;
+}
+
+// Response message for predicting a variant.
+message PredictVariantResponse {
+  // Reference output for each requested output type.
+  repeated Output reference_outputs = 1;
+
+  // Alternate output for each requested output type.
+  repeated Output alternate_outputs = 2;
+}
+
+// Request message for scoring a variant.
+message ScoreVariantRequest {
+  // DNA interval to make prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // DNA variant to make prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Variant variant = 2;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 3;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 4;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 7;
+  }
+
+  // Variant scorers to use for the prediction.
+  repeated VariantScorer variant_scorers = 5;
+
+  // Optional model version to use.
+  string model_version = 6;
+}
+
+// Response message for scoring a variant.
+message ScoreVariantResponse {
+  // Score variant outputs for each variant scorer.
+  repeated ScoreVariantOutput outputs = 1;
+}
+
+// Request message for scoring an in-silico mutagenesis (ISM) interval.
+message ScoreIsmVariantRequest {
+  // DNA interval to make the prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // ISM interval to make the prediction for.
+  google.gdm.gdmscience.alphagenome.v1main.Interval ism_interval = 2;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 3;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 4;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 8;
+  }
+
+  // Variant scorers to use for the prediction.
+  repeated VariantScorer variant_scorers = 5;
+
+  // Optional model version to use.
+  string model_version = 6;
+
+  // Optional variant applied to the reference interval. If provided, the
+  // alternate allele is used for in-silico mutagenesis, otherwise the
+  // unaltered reference sequence is used.
+  optional google.gdm.gdmscience.alphagenome.v1main.Variant interval_variant =
+      7;
+}
+
+// Response message for scoring an in-silico mutagenesis (ISM) interval.
+message ScoreIsmVariantResponse {
+  // Score variant outputs for each variant scorer.
+  repeated ScoreVariantOutput outputs = 1;
+}
+
+// Request message for getting observed metadata for an organism.
+message ObservedMetadataRequest {
+  // Required. The organism we should return metadata for.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 1;
+}
+
+// Response message for getting observed metadata for an organism.
+message ObservedMetadataResponse {
+  // The metadata for each output type.
+  repeated ObservedMetadata observed_metadata = 1;
+}
+
+// Request message for getting supported conditions for an organism.
+message SupportedConditionsRequest {
+  // Required. The organism we should return metadata for.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 1;
+}
+
+// Response message for getting supported conditions for an organism.
+message SupportedConditionsResponse {
+  // The supported conditions for each condition and output type.
+  repeated SupportedCondition supported_conditions = 1;
+}
+
+// Request message for encoding cells.
+message EncodeCellsRequest {
+  // Cell conditioning input with sparse gene counts.
+  CellConditioningInput cell_conditioning = 1;
+}
+
+// Response message for encoding cells.
+message EncodeCellsResponse {
+  // Per-cell latent embeddings.
+  CellEmbeddings cell_embeddings = 1;
+}
+
+// Request message for predicting input gradients for a gene.
+message PredictIntervalGradientsRequest {
+  // Required. Length of the input sequence centered on the target gene's
+  // median TSS.
+  int64 sequence_length = 1;
+
+  // Required. Organism to use for the prediction.
+  google.gdm.gdmscience.alphagenome.v1main.Organism organism = 2;
+
+  // Conditioning input for the prediction. Exactly one must be set.
+  oneof condition_input {
+    // Ontology-based condition (e.g. tissue type).
+    Condition condition = 3;
+
+    // Cell conditioning input from single-cell gene counts.
+    CellConditioningInput cell_conditioning = 4;
+  }
+
+  // Required. Target gene and output type to compute input gradients for.
+  InputGradientTarget target = 5;
+
+  // Optional model version to use.
+  string model_version = 6;
+}
+
+// Response message for predicting input gradients for a genomic interval.
+message PredictIntervalGradientsResponse {
+  // Computed input gradients and associated metadata.
+  InputGradientsOutput output = 1;
+}

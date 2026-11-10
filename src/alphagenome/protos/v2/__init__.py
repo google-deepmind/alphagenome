@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC.
+# Copyright 2026 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Backward-compatible re-export shim for alphagenome.models.dna_output."""
-
-from alphagenome.models.v1.dna_output import *  # pylint: disable=wildcard-import,unused-wildcard-import
+"""Protocol buffers for interacting with v2 genomic models."""

@@ -301,6 +301,54 @@ class JunctionDataTest(parameterized.TestCase):
     self.assertListEqual(list(updated.metadata['new_col']), ['a', 'b'])
     self.assertNotIn('new_col', jdata.metadata.columns)
 
+  def test_filter_to_observed(self):
+    metadata = pd.DataFrame({
+        'name': ['track_0', 'track_1', 'track_2'],
+        'imputation_mode': ['observed', 'imputed_supported', 'observed'],
+    })
+    junctions = np.array([
+        genome.Interval('chr1', 10, 20, '+'),
+        genome.Interval('chr1', 15, 25, '-'),
+    ])
+    values = np.arange(6, dtype=np.float32).reshape((2, 3))
+    jdata = junction_data.JunctionData(
+        junctions=junctions,
+        values=values,
+        metadata=metadata,
+        interval=genome.Interval('chr1', 0, 100),
+    )
+
+    filtered = jdata.filter_to_observed()
+
+    expected = junction_data.JunctionData(
+        junctions=junctions,
+        values=np.array([[0, 2], [3, 5]], dtype=np.float32),
+        metadata=pd.DataFrame(
+            {
+                'name': ['track_0', 'track_2'],
+                'imputation_mode': ['observed', 'observed'],
+            },
+            index=[0, 2],
+        ),
+        interval=genome.Interval('chr1', 0, 100),
+    )
+    self.assertEqual(filtered, expected)
+
+  def test_filter_to_observed_missing_column_raises(self):
+    metadata = pd.DataFrame({
+        'name': ['foo', 'bar'],
+        'gtex_tissue': ['Liver', 'Lung'],
+    })
+    junctions = np.array([genome.Interval('chr1', 10, 20, '+')])
+    values = np.array([[1.0, 2.0]], dtype=np.float32)
+    jdata = junction_data.JunctionData(junctions, values, metadata)
+
+    with self.assertRaisesRegex(
+        ValueError,
+        r"Column 'imputation_mode' not found in metadata\. Available columns:",
+    ):
+      jdata.filter_to_observed()
+
 
 if __name__ == '__main__':
   absltest.main()

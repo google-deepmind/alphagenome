@@ -605,6 +605,44 @@ class TrackDataTrackSubsetTest(parameterized.TestCase):
       dict(num_positional=1),
       dict(num_positional=2),
   ])
+  def test_filter_to_observed(self, num_positional: int):
+    values = (
+        np.arange(2**num_positional * 3)
+        .reshape([2] * num_positional + [3])
+        .astype(np.int32)
+    )
+    metadata = pd.DataFrame({
+        'name': ['first', 'first', 'second'],
+        'strand': ['+', '-', '.'],
+        'imputation_mode': ['observed', 'imputed_supported', 'observed'],
+    })
+    tdata = track_data.TrackData(values, metadata, resolution=2)
+    tdata2 = tdata.filter_to_observed()
+    self.assertEqual(tdata2.num_tracks, 2)
+    self.assertListEqual(list(tdata2.names), ['first', 'second'])
+    self.assertListEqual(list(tdata2.strands), ['+', '.'])
+    self.assertListEqual(
+        list(tdata2.metadata['imputation_mode']), ['observed', 'observed']
+    )
+    np.testing.assert_array_equal(tdata2.values, values[..., [0, 2]])
+
+  def test_filter_to_observed_missing_column(self):
+    values = np.arange(6).reshape((2, 3)).astype(np.int32)
+    metadata = pd.DataFrame({
+        'name': ['first', 'first', 'second'],
+        'strand': ['+', '-', '.'],
+    })
+    tdata = track_data.TrackData(values, metadata, resolution=2)
+    with self.assertRaisesRegex(
+        ValueError, "Column 'imputation_mode' not found in metadata"
+    ):
+      tdata.filter_to_observed()
+
+  @parameterized.parameters([
+      dict(num_positional=0),
+      dict(num_positional=1),
+      dict(num_positional=2),
+  ])
   def test_select_tracks_by_index(self, num_positional: int):
     values = (
         np.arange(2**num_positional * 3)

@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+
 from absl.testing import absltest
 from absl.testing import parameterized
+from alphagenome.data import gene_expression_data
 from alphagenome.data import genome
 from alphagenome.data import junction_data
 from alphagenome.data import track_data
 from alphagenome.data import transcript as transcript_utils
+from alphagenome.visualization import plot as plot_lib
 from alphagenome.visualization import plot_components
 import anndata
 import matplotlib
@@ -432,6 +436,375 @@ class PlotComponentsTest(parameterized.TestCase):
         [[100.0, 0.0], [101.0, 0.0], [101.0, 5.0], [100.0, 5.0]],
     )
     plt.close()
+
+
+class EnhancerArcsTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.interval = genome.Interval('chr2', 60_490_000, 60_560_000)
+    self.links = pd.DataFrame({
+        'chromosome': ['chr2', 'chr2', 'chr2', 'chr1', 'chr2'],
+        'start': [
+            60_495_000,
+            60_498_000,
+            60_500_000,
+            60_495_000,
+            60_600_000,
+        ],
+        'end': [
+            60_495_500,
+            60_498_500,
+            60_500_500,
+            60_495_500,
+            60_600_500,
+        ],
+        'gene_id': [
+            'ENSG00000119866.1',
+            'ENSG00000119866.22',
+            'ENSG00000999999.1',
+            'ENSG00000119866.1',
+            'ENSG00000119866.1',
+        ],
+        'tss': [60_553_651] * 5,
+        'gradient_score': [0.005, 0.015, 0.012, 0.010, 0.010],
+    })
+
+  @parameterized.parameters([
+      dict(
+          upward=None,
+          fig_height=None,
+          expected_height=1.0,
+          expected_ylim=(-0.05, 1.08),
+          sign=1.0,
+      ),
+      dict(
+          upward=False,
+          fig_height=0.9,
+          expected_height=0.9,
+          expected_ylim=(-1.08, 0.05),
+          sign=-1.0,
+      ),
+  ])
+  def test_enhancer_arcs_geometry_and_styling(
+      self, upward, fig_height, expected_height, expected_ylim, sign
+  ):
+    extra_kwargs = {}
+    if upward is not None:
+      extra_kwargs['upward'] = upward
+    if fig_height is not None:
+      extra_kwargs['fig_height'] = fig_height
+    arcs_comp = plot_components.EnhancerArcs(
+        self.links,
+        gene_id='ENSG00000119866.5',
+        cmap='Purples',
+        vmin=0.002,
+        vmax=0.020,
+        alpha_range=(0.2, 0.8),
+        linewidth_range=(1.0, 2.8),
+        ylabel='E2G arcs',
+        **extra_kwargs,
+    )
+    self.assertEqual(arcs_comp.num_axes, 1)
+    self.assertEqual(arcs_comp.get_ax_height(0), expected_height)
+    view = genome.Interval('chr2', 60_390_000, 60_590_000)
+    _, ax = plt.subplots()
+    arcs_comp.plot_ax(ax, axis_index=0, interval=view)
+    self.assertLen(ax.lines, 1)
+    self.assertLen(ax.patches, 2)
+    self.assertEqual(ax.get_ylim(), expected_ylim)
+
+    verts0 = ax.patches[0].get_path().vertices
+    verts1 = ax.patches[1].get_path().vertices
+    span_frac0 = min(1.0, (60_553_651.0 - 60_495_250.0) / 200_000.0 * 1.5)
+    expected_apex0 = sign * (0.35 + 0.65 * span_frac0)
+    bezier_mid0 = (
+        0.125 * verts0[0]
+        + 0.375 * verts0[1]
+        + 0.375 * verts0[2]
+        + 0.125 * verts0[3]
+    )
+    np.testing.assert_allclose(verts0[0], [60_553_651.0, 0.0])
+    np.testing.assert_allclose(verts0[-1], [60_495_250.0, 0.0])
+    np.testing.assert_allclose(
+        bezier_mid0, [0.5 * (60_553_651.0 + 60_495_250.0), expected_apex0]
+    )
+    np.testing.assert_allclose(verts1[0], [60_553_651.0, 0.0])
+    np.testing.assert_allclose(verts1[-1], [60_498_250.0, 0.0])
+
+    # Explicit vmin=0.002, vmax=0.020 -> norm_scores = [1/6, 13/18].
+    self.assertAlmostEqual(ax.patches[0].get_alpha(), 0.2 + 0.6 * (1.0 / 6.0))
+    self.assertAlmostEqual(
+        ax.patches[0].get_linewidth(), 1.0 + 1.8 * (1.0 / 6.0)
+    )
+    self.assertAlmostEqual(ax.patches[1].get_alpha(), 0.2 + 0.6 * (13.0 / 18.0))
+    self.assertAlmostEqual(
+        ax.patches[1].get_linewidth(), 1.0 + 1.8 * (13.0 / 18.0)
+    )
+    plt.close()
+
+  @parameterized.parameters([
+      dict(
+          view=genome.Interval('chr2', 60_490_000, 60_560_000),
+          tss=None,
+          interval_contained=True,
+          expected_patches=2,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_490_000, 60_560_000),
+          tss=None,
+          interval_contained=False,
+          expected_patches=3,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_545_000, 60_560_000),
+          tss=None,
+          interval_contained=True,
+          expected_patches=0,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_545_000, 60_560_000),
+          tss=None,
+          interval_contained=False,
+          expected_patches=3,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_510_000, 60_530_000),
+          tss=None,
+          interval_contained=False,
+          expected_patches=2,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_490_000, 60_560_000),
+          tss=60_580_000,
+          interval_contained=True,
+          expected_patches=0,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_490_000, 60_560_000),
+          tss=60_580_000,
+          interval_contained=False,
+          expected_patches=2,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_495_250, 60_498_250),
+          tss=60_498_250,
+          interval_contained=True,
+          expected_patches=2,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_495_250, 60_498_250),
+          tss=60_498_250,
+          interval_contained=False,
+          expected_patches=2,
+      ),
+      dict(
+          view=genome.Interval('chr2', 60_495_250, 60_497_000),
+          tss=60_495_250,
+          interval_contained=False,
+          expected_patches=3,
+      ),
+  ])
+  def test_enhancer_arcs_interval_contained(
+      self, view, tss, interval_contained, expected_patches
+  ):
+    arcs_comp = plot_components.EnhancerArcs(
+        self.links,
+        tss=tss,
+        gene_id='ENSG00000119866.5',
+        interval_contained=interval_contained,
+    )
+    _, ax = plt.subplots()
+    arcs_comp.plot_ax(ax, axis_index=0, interval=view)
+    self.assertLen(ax.patches, expected_patches)
+    self.assertEqual(ax.get_xlim(), (float(view.start), float(view.end)))
+    plt.close()
+
+  @parameterized.parameters([
+      dict(
+          peak_col=None,
+          expected_xs=[60_495_750.0, 60_500_500.0, 60_510_500.0],
+      ),
+      dict(
+          peak_col='summit',
+          expected_xs=[60_495_100.0, 60_500_500.0, 60_510_900.0],
+      ),
+  ])
+  def test_enhancer_arcs_peak_col_and_nan_scores(self, peak_col, expected_xs):
+    links = pd.DataFrame({
+        'chromosome': ['chr2', 'chr2', 'chr2'],
+        'start': [60_495_000, 60_500_000, 60_510_000],
+        'end': [60_496_500, 60_501_000, 60_511_000],
+        'summit': [60_495_100.0, np.nan, 60_510_900.0],
+        'tss': [60_553_651, 60_553_651, 60_553_651],
+        'gradient_score': [0.0012, 0.0013, np.nan],
+    })
+    with warnings.catch_warnings():
+      warnings.simplefilter('error', RuntimeWarning)
+      arcs = plot_components.EnhancerArcs(
+          links,
+          peak_col=peak_col,
+          alpha_range=(0.3, 0.9),
+          linewidth_range=(1.0, 2.0),
+      )
+      _, ax = plt.subplots()
+      arcs.plot_ax(ax, axis_index=0, interval=self.interval)
+
+    self.assertLen(ax.patches, 3)
+    for patch, expected_x in zip(ax.patches, expected_xs, strict=True):
+      np.testing.assert_allclose(patch.get_path().vertices[-1], [expected_x, 0])
+    self.assertGreater(ax.patches[0].get_path().vertices[1][1], 0.0)
+    self.assertAlmostEqual(ax.patches[0].get_linewidth(), 1.0 + 0.0012 / 0.0013)
+    self.assertAlmostEqual(ax.patches[1].get_linewidth(), 2.0)
+    self.assertAlmostEqual(ax.patches[2].get_linewidth(), 1.0)
+    self.assertAlmostEqual(ax.patches[2].get_alpha(), 0.3)
+    plt.close()
+
+  def test_enhancer_arcs_nullable_dtypes_and_empty_links(self):
+    nullable_links = pd.DataFrame({
+        'start': pd.Series([60_495_000, 60_500_000], dtype='Int64'),
+        'end': pd.Series([60_496_000, 60_501_000], dtype='Int64'),
+        'summit': pd.Series([pd.NA, 60_500_250.0], dtype='Float64'),
+        'tss': pd.Series([60_553_651, 60_553_651], dtype='Int64'),
+        'gradient_score': pd.Series([0.01, pd.NA], dtype='Float64'),
+    })
+    _, ax_na = plt.subplots()
+    plot_components.EnhancerArcs(nullable_links, peak_col='summit').plot_ax(
+        ax_na, axis_index=0, interval=self.interval
+    )
+    self.assertLen(ax_na.patches, 2)
+    np.testing.assert_allclose(
+        ax_na.patches[0].get_path().vertices[-1], [60_495_500.0, 0.0]
+    )
+    np.testing.assert_allclose(
+        ax_na.patches[1].get_path().vertices[-1], [60_500_250.0, 0.0]
+    )
+    plt.close()
+
+    _, ax_empty = plt.subplots()
+    plot_components.EnhancerArcs(
+        self.links.iloc[0:0], tss=60_553_651, score_col=None
+    ).plot_ax(ax_empty, axis_index=0, interval=self.interval)
+    self.assertLen(ax_empty.lines, 1)
+    self.assertEmpty(ax_empty.patches)
+    self.assertEqual(ax_empty.get_ylim(), (-0.05, 1.08))
+    plt.close()
+
+  def test_enhancer_arcs_plot_standalone_and_validation(self):
+    _, ax_standalone = plt.subplots()
+    plot_lib.enhancer_arcs_plot(self.links.iloc[:1], ax=ax_standalone)
+    self.assertLen(ax_standalone.lines, 1)
+    self.assertLen(ax_standalone.patches, 1)
+    self.assertEqual(ax_standalone.get_ylim(), (-0.05, 1.08))
+    v_max = ax_standalone.patches[0].get_path().vertices
+    mid_max = 0.125 * (v_max[0] + v_max[3]) + 0.375 * (v_max[1] + v_max[2])
+    self.assertAlmostEqual(mid_max[1], 1.0)
+    plt.close()
+
+    _, ax_zero = plt.subplots()
+    plot_lib.enhancer_arcs_plot(self.links.iloc[:1], ax=ax_zero, tss=60_495_250)
+    v_zero = ax_zero.patches[0].get_path().vertices
+    mid_zero = 0.125 * (v_zero[0] + v_zero[3]) + 0.375 * (v_zero[1] + v_zero[2])
+    self.assertAlmostEqual(mid_zero[1], 0.35)
+    plt.close()
+
+    _, ax_err = plt.subplots()
+    with self.assertRaisesRegex(ValueError, 'Either `tss` must be provided'):
+      plot_components.EnhancerArcs(
+          pd.DataFrame({'start': [1], 'end': [2]})
+      ).plot_ax(ax_err, axis_index=0, interval=self.interval)
+    plt.close()
+
+    _, ax_key_err = plt.subplots()
+    with self.assertRaises(KeyError):
+      plot_components.EnhancerArcs(self.links, peak_col='summit_typo').plot_ax(
+          ax_key_err, axis_index=0, interval=self.interval
+      )
+    plt.close()
+
+
+class GeneExpressionPlotTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.interval = genome.Interval('chr1', 0, 2000, strand='+')
+    self.gene_metadata = pd.DataFrame({
+        'gene_id': ['gene_a', 'gene_b', 'gene_c'],
+        'gene_name': ['GeneA', 'GeneB', 'GeneC'],
+        'strand': ['+', '-', '+'],
+        'Chromosome': ['chr1', 'chr1', 'chr1'],
+        'Start': [100, 500, 1200],
+        'End': [200, 800, 1500],
+        'gene_type': ['protein_coding'] * 3,
+    })
+    self.track_metadata = pd.DataFrame({
+        'name': ['track_1', 'track_2'],
+        'strand': ['+', '-'],
+    })
+    self.gdata = gene_expression_data.GeneExpressionData(
+        values=np.array([[1.0, 2.0], [3.0, 4.0], [0.5, 1.5]]),
+        gene_metadata=self.gene_metadata,
+        track_metadata=self.track_metadata,
+        interval=self.interval,
+    )
+
+  @parameterized.parameters(
+      dict(filled=False, shared_y_scale=False, log_scale=False),
+      dict(filled=True, shared_y_scale=False, log_scale=False),
+      dict(filled=False, shared_y_scale=True, log_scale=False),
+      dict(filled=False, shared_y_scale=False, log_scale=True),
+  )
+  def test_gene_expression(self, filled, shared_y_scale, log_scale):
+    component = plot_components.GeneExpression(
+        gdata=self.gdata,
+        filled=filled,
+        shared_y_scale=shared_y_scale,
+        log_scale=log_scale,
+    )
+    fig = plot_components.plot([component], interval=self.interval)
+    self.assertIsInstance(fig, matplotlib.figure.Figure)
+
+  def test_fails_without_gene_coords(self):
+    gdata = gene_expression_data.GeneExpressionData(
+        values=np.array([[1.0, 2.0], [3.0, 4.0], [0.5, 1.5]]),
+        gene_metadata=self.gene_metadata.drop(
+            columns=['Chromosome', 'Start', 'End']
+        ),
+        track_metadata=self.track_metadata,
+        interval=self.interval,
+    )
+    component = plot_components.GeneExpression(
+        gdata=gdata,
+    )
+    with self.assertRaisesRegex(ValueError, 'Gene coordinates are missing'):
+      plot_components.plot([component], interval=self.interval)
+
+  @parameterized.parameters(
+      dict(colors=None, shared_y_scale=False, log_scale=False),
+      dict(
+          colors={'ref': 'blue', 'alt': 'red'},
+          shared_y_scale=False,
+          log_scale=False,
+      ),
+      dict(colors=None, shared_y_scale=True, log_scale=False),
+      dict(colors=None, shared_y_scale=False, log_scale=True),
+  )
+  def test_overlaid_gene_expression(self, colors, shared_y_scale, log_scale):
+    gdata_alt = gene_expression_data.GeneExpressionData(
+        values=self.gdata.values * 1.5,
+        gene_metadata=self.gdata.gene_metadata,
+        track_metadata=self.gdata.track_metadata,
+        interval=self.gdata.interval,
+    )
+    gdata_map = {'ref': self.gdata.copy(), 'alt': gdata_alt}
+    component = plot_components.OverlaidGeneExpression(
+        gdata=gdata_map,
+        colors=colors,
+        shared_y_scale=shared_y_scale,
+        log_scale=log_scale,
+    )
+    fig = plot_components.plot([component], interval=self.interval)
+    self.assertIsInstance(fig, matplotlib.figure.Figure)
 
 
 if __name__ == '__main__':

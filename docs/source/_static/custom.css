@@ -1,0 +1,452 @@
+/* AlphaGenome layout and typography on top of sphinx-book-theme and
+ * pydata-sphinx-theme.
+ *
+ * Fonts are set through `--pst-font-family-*` variables (loaded in conf.py),
+ * while all documentation pages outside `index.md` keep the upstream themes'
+ * default color palette. Component rules reuse the selector of the upstream
+ * rule they override and win by load order; the few `!important` declarations
+ * override upstream `!important` rules (noted inline).
+ */
+
+/* Theme variables. */
+html {
+  --pst-font-family-base: 'Google Sans Text', 'Roboto', var(--pst-font-family-base-system);
+  --pst-font-family-heading: 'Google Sans', 'Roboto', var(--pst-font-family-base-system);
+  --pst-font-family-monospace: 'Roboto Mono', var(--pst-font-family-monospace-system);
+}
+
+/* Headings font for component labels. */
+.sd-card-title,
+.sd-badge,
+.bd-article table.table thead th,
+.bd-content .sd-tab-set > label {
+  font-family: var(--pst-font-family-heading);
+  font-weight: 500;
+}
+
+div.highlight pre {
+  border-radius: 10px;
+}
+
+/* Flat rounded cards. */
+.bd-content .sd-card {
+  border: 1px solid var(--sd-color-card-border);
+  border-radius: 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Overrides pydata's `html[data-theme=light] .sd-shadow-*` (!important). */
+html .bd-content .sd-card {
+  box-shadow: none !important;
+}
+
+.bd-content .sd-card .sd-card-header,
+.bd-content .sd-card .sd-card-body,
+.bd-content .sd-card .sd-card-footer {
+  background-color: transparent;
+}
+
+.bd-content .sd-card.sd-card-hover:hover {
+  transform: none;
+  border-color: var(--pst-color-primary);
+  background-color: var(--pst-color-surface);
+}
+
+.bd-content .sd-badge {
+  border-radius: 8px;
+  padding: 0.25em 0.6em;
+}
+
+/* Outlined tables; `overflow-x: auto` keeps wide tables scrollable. */
+.bd-article .pst-scrollable-table-container:has(> table.table) {
+  border: 1px solid var(--sd-color-card-border);
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+
+.bd-article table.table {
+  margin-bottom: 0;
+  border-collapse: collapse;
+}
+
+.bd-article table.table thead th,
+.bd-article table.table tbody td {
+  padding: 0.75rem 1rem;
+}
+
+/* Long notebook DataFrames scroll inside the same 24em box as myst-nb's
+   `scroll-output` tag, without affecting figure outputs. */
+.bd-content div.cell_output .output.text_html:has(> table.dataframe) {
+  max-height: 24em;
+  overflow: auto;
+}
+
+/* Stick the whole header (DataFrames with a named index have two header
+   rows) above the scrolling body rows. Collapsed row borders stay in the
+   table's border grid instead of moving with a sticky header, so use
+   separate borders and draw the header underline on the header cells. */
+.bd-content div.cell_output table.dataframe {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.bd-content div.cell_output table.dataframe thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bd-content div.cell_output table.dataframe thead th {
+  background-color: var(--pst-color-background);
+}
+
+.bd-content div.cell_output table.dataframe thead tr:last-child th {
+  border-bottom: 2px solid var(--pst-color-primary);
+}
+
+/* Underline tabs (replaces pydata's boxed tabs). The `html[data-theme]`
+   prefix matches pydata's dark-mode label rule. */
+html[data-theme] .bd-content .sd-tab-set > label {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem -1px 0;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.bd-content .sd-tab-set > input:not(:checked) + label:hover {
+  background-color: var(--pst-color-surface);
+  border-color: transparent;
+  color: var(--pst-color-primary);
+  text-decoration: none;
+}
+
+.bd-content .sd-tab-set > input:checked + label {
+  background-color: transparent;
+  color: var(--pst-color-primary);
+  border: none;
+  border-bottom: 2px solid var(--pst-color-primary);
+}
+
+.bd-content .sd-tab-set .sd-tab-content {
+  border: none;
+  border-top: 1px solid var(--sd-color-card-border);
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0.85rem 0 0;
+}
+
+div.admonition {
+  border-radius: 12px;
+}
+
+/* Overrides pydata's admonition `box-shadow` (!important). */
+html div.admonition {
+  box-shadow: none !important;
+}
+
+/* API pages: no highlight on `#Symbol` anchors (pydata `dt:target`). */
+dl.py > dt:target {
+  background-color: transparent;
+}
+
+/* Responsive 16:9 video embeds inside equal-height cards (`resources.md`). */
+.bd-content .sd-card .sd-card-body.ag-video-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.ag-video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-top: auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--sd-color-card-border);
+  background-color: var(--pst-color-surface);
+}
+
+.ag-video-embed {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* Header buttons. With only `use_repository_button`, sphinx-book-theme renders
+   the GitHub button as an `<a>` without pydata's `pst-navbar-icon` class, so it
+   is taller (39.2px) than the other header buttons (2.15rem). The flex row then
+   stretches the download and theme dropdowns to match, and the icons end up at
+   different heights. Give the link the same centered box as the other buttons. */
+.article-header-buttons > a.btn-source-repository-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.15rem;
+}
+
+/* The GitHub and fullscreen icons sit in an inline wrapper on the text
+   baseline, which Google Sans Text places ~1px higher than the theme's default
+   font. Center the wrapper as a flex box so the icons line up vertically. */
+.article-header-buttons .btn__icon-container {
+  display: flex;
+  align-items: center;
+}
+
+/* Landing page (`index.md`): monochrome light/dark palette scoped strictly to
+   `.bd-article:has(.ag-hero)` so the left sidebar, header chrome, and inner
+   pages keep the upstream theme colors. */
+html[data-theme='light'] .bd-article:has(.ag-hero) {
+  --pst-color-text-base: #141519;
+  --pst-color-text-muted: #5c606b;
+  --pst-color-primary: #141519;
+  --pst-color-primary-highlight: #000000;
+  --pst-color-link: #141519;
+  --pst-color-link-hover: #000000;
+  --pst-color-link-higher-contrast: #141519;
+  --sd-color-card-border: #e3e5eb;
+  --ag-hero-border: rgba(14, 11, 40, 0.08);
+  --ag-prose-underline: rgba(20, 21, 25, 0.42);
+  --ag-tile-bg: #f9fafb;
+  --ag-tile-hover-bg: #f1f2f6;
+  --ag-tile-hover-border: #141519;
+  --ag-tile-icon: #2c303a;
+}
+
+html[data-theme='dark'] .bd-article:has(.ag-hero) {
+  --pst-color-text-base: #eceef3;
+  --pst-color-text-muted: #989ea9;
+  --pst-color-primary: #f2f3f7;
+  --pst-color-primary-highlight: #ffffff;
+  --pst-color-link: #f2f3f7;
+  --pst-color-link-hover: #ffffff;
+  --pst-color-link-higher-contrast: #f2f3f7;
+  --sd-color-card-border: #2b2e35;
+  --ag-hero-border: rgba(255, 255, 255, 0.09);
+  --ag-prose-underline: rgba(242, 243, 247, 0.45);
+  --ag-tile-bg: #191b1f;
+  --ag-tile-hover-bg: #22252b;
+  --ag-tile-hover-border: rgba(255, 255, 255, 0.52);
+  --ag-tile-icon: #c8ccd6;
+}
+
+/* Landing page: the H1 only provides the page title; the hero replaces it.
+   MyST block attributes apply to the whole section, not the heading. */
+.bd-article:has(.ag-hero) h1 {
+  display: none;
+}
+
+/* Landing page: wider article (no right-hand TOC on this page). */
+.bd-main .bd-content .bd-article-container:has(.ag-hero) {
+  max-width: 72rem;
+}
+
+/* Monochrome prose links on the landing page carry a hairline underline. */
+.bd-article:has(.ag-hero) p a.reference {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--ag-prose-underline);
+}
+
+.bd-article:has(.ag-hero) p a.reference:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Hero banner: always dark to match the background video, in both themes. */
+.ag-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 340px;
+  margin: 0.5rem 0 2rem;
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--ag-hero-border);
+  overflow: hidden;
+  background: radial-gradient(
+    110% 140% at 72% 50%,
+    #171442 0%,
+    #0e0b28 58%,
+    #09081c 100%
+  );
+}
+
+.ag-hero-video {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 72%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 40% 50%;
+  pointer-events: none;
+  --ag-hero-mask: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.6) 24%,
+    #000 45%
+  );
+  -webkit-mask-image: var(--ag-hero-mask);
+  mask-image: var(--ag-hero-mask);
+}
+
+.ag-hero-text {
+  position: relative;
+  z-index: 1;
+  max-width: min(26rem, 52%);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.ag-hero-text h2 {
+  margin: 0 0 0.75rem;
+  font: 500 2.5rem var(--pst-font-family-heading);
+  color: #fff;
+  border: none;
+}
+
+.ag-hero-text p {
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.ag-hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ag-hero a.ag-btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font: 500 0.95rem var(--pst-font-family-heading);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ag-hero a.ag-btn:hover {
+  color: #fff;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ag-hero a.ag-btn-primary {
+  color: #0e0b28;
+  border-color: #fff;
+  background: #fff;
+}
+
+.ag-hero a.ag-btn-primary:hover {
+  color: #0e0b28;
+  border-color: #eef0f6;
+  background: #eef0f6;
+}
+
+@media (max-width: 960px) {
+  .ag-hero {
+    padding: 1.75rem;
+  }
+
+  .ag-hero-text {
+    max-width: 100%;
+  }
+
+  /* Full-width video, dimmed so the text stays readable on top of it. */
+  .ag-hero-video {
+    width: 100%;
+    --ag-hero-mask: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.3) 60%,
+      rgba(0, 0, 0, 0.55) 100%
+    );
+  }
+}
+
+/* Show the still poster instead of the looping video. */
+@media (prefers-reduced-motion: reduce) {
+  .ag-hero {
+    background: #0e0b28 url('hero_poster.jpg') 70% 50% / cover no-repeat;
+  }
+
+  .ag-hero-video {
+    display: none;
+  }
+}
+
+/* Feature row: borderless columns (borders removed by `sd-border-0`). */
+.ag-features {
+  margin-bottom: 2rem;
+}
+
+.ag-features .sd-card-title {
+  font-size: 1.3rem;
+}
+
+/* Link tiles. */
+.ag-tiles {
+  margin-bottom: 2.5rem;
+}
+
+.bd-article .sd-card.ag-tile {
+  height: 108px;
+  background-color: var(--ag-tile-bg);
+  color: var(--pst-color-text-base);
+}
+
+.bd-article .sd-card.ag-tile:hover {
+  background-color: var(--ag-tile-hover-bg);
+  border-color: var(--ag-tile-hover-border);
+}
+
+.ag-tile .sd-card-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Beats sphinx-book-theme's dark-mode `.sd-card .sd-card-title` text-shadow. */
+.bd-article .sd-card.ag-tile .sd-card-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--pst-color-text-base);
+  text-shadow: none;
+}
+
+.bd-article .sd-card.ag-tile svg {
+  width: 1.55em;
+  height: 1.55em;
+  color: var(--ag-tile-icon);
+  transition: color 0.15s ease;
+}
+
+.bd-article .sd-card.ag-tile:hover svg {
+  color: var(--pst-color-primary-highlight);
+}
+
+.bd-article .sd-card.ag-tile:hover .sd-card-title {
+  color: var(--pst-color-primary-highlight);
+}
+
+/* pydata sets captions to the light caption weight (300), so `strong` (bolder)
+ * resolves to 400, which looks the same as the caption text. */
+figure figcaption strong {
+  font-weight: 500;
+}

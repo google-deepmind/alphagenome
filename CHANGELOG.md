@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0]
+
+### Added
+
+-   AlphaGenome 2 model API (`alphagenome.models.v2`), supporting
+    reference-condition and single-cell expression-conditioned predictions,
+    variant and interval scoring, cell embeddings, and input gradients.
+-   `GeneExpressionData` container for gene-level expression predictions.
+-   Enhancer-to-gene scoring and calling utilities
+    (`alphagenome.interpretation.enhancer_scoring`).
+-   `GeneExpression`, `OverlaidGeneExpression`, and `EnhancerArcs` plot
+    components.
+-   `filter_to_observed` helper on `TrackData` and `JunctionData`.
+-   Tutorials, vignettes, and user guides for AlphaGenome 2.
+
+### Removed
+
+-   Deprecated `alphagenome.models.*` v1 aliases; import from
+    `alphagenome.models.v1` instead.
+
 ## [0.11.0]
 
 ### Changed

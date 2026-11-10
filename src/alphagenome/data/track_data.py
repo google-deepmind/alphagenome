@@ -58,7 +58,8 @@ class TrackData:
   """Container for storing track values and metadata.
 
   `TrackData` stores multiple genomic tracks at the same resolution, stacked
-  into an ND matrix of shape (positional_bins, num_tracks). It also contains
+  into an N-dimensional array whose last axis is `num_tracks` (for example,
+  shape (positional_bins, num_tracks)). It also contains
   metadata information as a pandas DataFrame with `num_tracks` rows.
 
   Metadata DataFrame has two main required columns:
@@ -522,6 +523,17 @@ class TrackData:
   def filter_to_unstranded(self) -> 'TrackData':
     """Filters tracks to unstranded tracks."""
     return self.filter_tracks(self.strands == genome.STRAND_UNSTRANDED)
+
+  def filter_to_observed(self) -> 'TrackData':
+    """Filters tracks to observed tracks."""
+    if 'imputation_mode' not in self.metadata.columns:
+      raise ValueError(
+          "Column 'imputation_mode' not found in metadata. Available columns:"
+          f' {list(self.metadata.columns)}'
+      )
+    return self.filter_tracks(
+        (self.metadata['imputation_mode'] == 'observed').values
+    )
 
   def select_tracks_by_index(
       self, idx: np.ndarray | Sequence[int]

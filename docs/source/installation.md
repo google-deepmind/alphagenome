@@ -1,73 +1,134 @@
 # Installation
 
-The easiest way to install AlphaGenome is via the published
-[PyPi package](https://pypi.org/project/alphagenome).
+The `alphagenome` package is a lightweight Python client for the hosted
+AlphaGenome models and the AlphaGenome Atlas. It runs on Linux, macOS, and
+Windows, and no local GPU is required.
+
+Model predictions and Atlas queries both need a free
+[AlphaGenome API key](https://alphagenome.google/api).
+
+## Install the package
+
+Install the latest release from [PyPI](https://pypi.org/project/alphagenome)
+inside a virtual environment:
+
+`````{tab-set}
+````{tab-item} pip
+:sync: pip
 
 ```bash
-$ pip install -U alphagenome
+python3 -m venv .venv
+source .venv/bin/activate
+pip install alphagenome
+```
+````
+
+````{tab-item} uv
+:sync: uv
+
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install alphagenome
 ```
 
-This will install the latest version of the `alphagenome` package.
+Or add directly to an existing `uv` project:
 
-You may optionally wish to create a
-[Python Virtual Environment](https://docs.python.org/3/tutorial/venv.html) to
-prevent conflicts with your system's Python environment.
+```bash
+uv add alphagenome
+```
+````
+
+````{tab-item} conda
+:sync: conda
+
+```bash
+conda create -n alphagenome python -y
+conda activate alphagenome
+pip install alphagenome
+```
+````
+
+````{tab-item} From source
+:sync: source
+
+Clone the [GitHub repository](https://github.com/google-deepmind/alphagenome)
+for an editable install:
+
+```bash
+git clone https://github.com/google-deepmind/alphagenome.git
+cd alphagenome
+pip install -e .
+```
+
+To pull upstream changes later:
+
+```bash
+git pull
+pip install -e .
+```
+````
+`````
 
 ## Google Colab
 
-The tutorial notebooks include a cell with the commands necessary to install
-`alphagenome` into a Colab runtime.
+Every tutorial notebook starts with an install cell that installs `alphagenome`
+(and any extra packages that notebook needs) in your Colab runtime:
+
+```python
+! pip install alphagenome
+```
 
 ### Add API key to secrets
 
-To make model requests using the tutorial notebooks, you need to add the
-AlphaGenome API key to Colab secrets:
+To authenticate from Google Colab notebooks without pasting your API key into
+code cells:
 
-1.  Open your Google Colab notebook and click on the 🔑 **Secrets** tab in the
-    left panel.
-1.  Create a new secret with the name `ALPHA_GENOME_API_KEY`.
-1.  Copy/paste your API key into the `Value` input box of
-    `ALPHA_GENOME_API_KEY`.
-1.  Toggle the button on the left to allow notebook access to the secret.
+1.  Open your Google Colab notebook and click the **Secrets** icon (key symbol)
+    in the left sidebar.
+2.  Click **+ Add new secret** and name it `ALPHA_GENOME_API_KEY`.
+3.  Paste your [AlphaGenome API key](https://alphagenome.google/api) into the
+    **Value** field.
+4.  Toggle **Notebook access** on for the current notebook.
 
 <!-- mdformat off(Turn off mdformat to retain myst syntax.) -->
 
 ```{figure} /_static/secrets.png
 :width: 600px
-:alt: Image of secrets tab found on left panel.
+:alt: Adding ALPHA_GENOME_API_KEY in the Google Colab Secrets sidebar panel.
 :name: secrets-screenshot
 ```
 <!-- mdformat on -->
 
-## Running locally
+## Local API key configuration
 
-To install a local copy of `alphagenome`, clone a local copy of the repository
-and run `pip install`:
-
-```bash
-$ rm -rf ./alphagenome
-$ git clone https://github.com/google-deepmind/alphagenome.git
-$ pip install -e ./alphagenome
-```
-
-We strongly recommend using a virtual environment management system such as
-[miniconda](https://docs.anaconda.com/miniconda/) or
-[uv](https://docs.astral.sh/uv/pip/environments/).
-
-In the case of miniconda, installation would be achieved with the following:
+When running Python scripts or Jupyter notebooks locally, export
+`ALPHA_GENOME_API_KEY` in your shell environment (or add it to `~/.zshrc` /
+`~/.bashrc`):
 
 ```bash
-conda create -n alphagenome-env python=3.11
-conda activate alphagenome-env
-pip install -e ./alphagenome
+export ALPHA_GENOME_API_KEY="YOUR_API_KEY"
 ```
 
-### Updating `alphagenome`
+`colab_utils.get_api_key()` reads this environment variable first and falls back
+to Colab Secrets, so the same code runs locally and in Colab.
 
-Assuming the relevant virtual environment is already activated:
+## Verify your installation
 
-```bash
-cd ./alphagenome
-git pull
-pip install --upgrade .
+Confirm that the package is installed and your API key works:
+
+```python
+from alphagenome import colab_utils
+from alphagenome.models.v2 import dna_client
+
+dna_model = dna_client.create(colab_utils.get_api_key())
+print(len(dna_model.supported_conditions()), 'supported human conditions')
 ```
+
+## Next steps
+
+*   Continue to [Getting started](getting_started) to choose a tool and walk
+    through an AlphaGenome 2 workflow.
+*   Follow the interactive [Tutorials](tutorials/index) covering reference
+    conditions, expression conditioning (`cell_conditioning=`), and imputed
+    tracks.

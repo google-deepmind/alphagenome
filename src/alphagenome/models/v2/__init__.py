@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC.
+# Copyright 2025 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Backward-compatible re-export shim for alphagenome.models.track_data_utils."""
-
-from alphagenome.models.v1.track_data_utils import *  # pylint: disable=wildcard-import,unused-wildcard-import
+"""Models library for interacting with AlphaGenome v2 models."""

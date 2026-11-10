@@ -1,0 +1,613 @@
+// Copyright 2025 Google LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package google.gdm.gdmscience.alphagenome.v2main;
+
+import "alphagenome/protos/v1/dna_model.proto";
+import "alphagenome/protos/tensor.proto";
+
+option go_package = "google.golang.org/genproto/googleapis/gdm/gdmscience/alphagenome/v2main;alphagenome";
+option java_multiple_files = true;
+option java_outer_classname = "DnaModelProto";
+option java_package = "com.google.gdm.gdmscience.alphagenome.v2main";
+
+// Condition to use for the model prediction.
+message Condition {
+  // Optional CLO ontology id.
+  optional int64 clo = 1;
+
+  // Optional UBERON ontology id.
+  optional int64 uberon = 2;
+
+  // Optional CL ontology id.
+  optional int64 cl = 3;
+
+  // Optional EFO ontology id.
+  optional int64 efo = 4;
+
+  // Optional NTR ontology id.
+  optional int64 ntr = 5;
+}
+
+// Message containing metadata for a track.
+message TrackMetadata {
+  // Name of the track (unique in combination with strand).
+  string name = 1;
+
+  // Strand for the track.
+  google.gdm.gdmscience.alphagenome.v1main.Strand strand = 2;
+
+  // Biosample for the track.
+  google.gdm.gdmscience.alphagenome.v1main.Biosample biosample = 3;
+
+  // Condition for the track.
+  Condition condition = 4;
+
+  // The imputation mode for this track.
+  string imputation_mode = 5;
+
+  // Assay for the track.
+  optional string assay = 6;
+
+  // Data source for the track.
+  optional string data_source = 7;
+
+  // Optional histone mark for the track.
+  optional string histone_mark_code = 8;
+
+  // Optional transcription factor code for the track.
+  optional string transcription_factor_code = 9;
+
+  // Optional designation of donor / acceptor splice site for the track.
+  optional string splice_site_type = 10;
+
+  // Optional suspension type for the assay.
+  optional string suspension_type = 11;
+
+  // Optional sequence reading endedness.
+  optional string endedness = 12;
+
+  // Optional boolean indicating whether the track is genetically modified.
+  optional bool genetically_modified = 13;
+
+  // cellxgene ID for the dataset if relevant
+  optional string cellxgene_dataset_id = 14;
+
+  // Optional publication ID
+  optional string paper_doi = 15;
+
+  // Optional data pipeline
+  optional string data_pipeline = 16;
+}
+
+// Container for TrackMetadata.
+message TracksMetadata {
+  // Ordered list of metadata for each track.
+  repeated TrackMetadata metadata = 1;
+}
+
+// Message containing metadata for a splice junctions.
+message JunctionMetadata {
+  // Unique identifier for the junction.
+  string name = 1;
+
+  // Biosample for the track.
+  google.gdm.gdmscience.alphagenome.v1main.Biosample biosample = 2;
+
+  // Condition for the track.
+  Condition condition = 3;
+
+  // The imputation mode for this track.
+  string imputation_mode = 4;
+
+  // Assay for the track.
+  optional string assay = 5;
+
+  // Data source for the track.
+  optional string data_source = 6;
+}
+
+// Container for list of JunctionMetadata.
+message JunctionsMetadata {
+  // Ordered list of metadata for each junction.
+  repeated JunctionMetadata metadata = 1;
+}
+
+// Message containing metadata for a gene expression prediction.
+message GeneExpressionMetadata {
+  // ENSEMBL gene identifier without version number, e.g. "ENSG00000100342".
+  string gene_id = 1;
+
+  // Optional strand of the gene.
+  optional google.gdm.gdmscience.alphagenome.v1main.Strand strand = 2;
+
+  // Optional HGNC gene symbol, e.g. "APOL1".
+  optional string name = 3;
+
+  // Optional gene biotype, e.g. "protein_coding" or "lncRNA".
+  optional string type = 4;
+
+  // Chromosome of the gene.
+  string chromosome = 5;
+
+  // Start position of the gene in the chromosome.
+  int64 start = 6;
+
+  // End position of the gene in the chromosome.
+  int64 end = 7;
+}
+
+message GenesExpressionMetadata {
+  // Ordered list of metadata for each gene expression.
+  repeated GeneExpressionMetadata metadata = 1;
+}
+
+// Message for storing track values and metadata.
+message TrackData {
+  // Values for the track.
+  google.gdm.gdmscience.alphagenome.v1main.Tensor values = 1;
+
+  // Metadata for the track. The number of metadata elements must match the last
+  // dimension of the values tensor.
+  repeated TrackMetadata metadata = 2;
+
+  // Resolution of the track data in base pairs.
+  optional int64 resolution = 3;
+
+  // Optional Interval representing the genomic region.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 4;
+}
+
+// Message for storing splice junction values and metadata.
+message JunctionData {
+  // Values for the splice junction for each track.
+  google.gdm.gdmscience.alphagenome.v1main.Tensor values = 1;
+
+  // Metadata for the splice junction. The number of elements must match the
+  // last dimension of the values tensor.
+  repeated JunctionMetadata metadata = 2;
+
+  // Predicted splice junctions. The number of elements must match the first
+  // dimensions of the values tensor.
+  repeated google.gdm.gdmscience.alphagenome.v1main.Interval junctions = 3;
+
+  // Optional Interval representing the genomic region.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 4;
+}
+
+// Message for storing gene expression values and metadata.
+message GeneExpressionData {
+  // Values for the gene expression for each channel.
+  google.gdm.gdmscience.alphagenome.v1main.Tensor values = 1;
+
+  // Track metadata. The number of elements must match the second dimension of
+  // the values tensor.
+  repeated TrackMetadata track_metadata = 2;
+
+  // Gene metadata for each value returned. The number of elements must match
+  // the first dimension of the values tensors
+  repeated GeneExpressionMetadata gene_metadata = 3;
+
+  // Interval representing the requested genomic region.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 4;
+}
+
+// Message for storing model outputs for a single output type.
+message Output {
+  // The type of output.
+  OutputType output_type = 1;
+
+  // The payload for the output.
+  oneof payload {
+    // Track data for the output. Used in all output types except
+    // OUTPUT_TYPE_SPLICE_JUNCTIONS.
+    TrackData track_data = 2;
+
+    // Raw predictions with no metadata.
+    google.gdm.gdmscience.alphagenome.v1main.Tensor data = 3;
+
+    // Junction data for the output. This is only set for
+    // OUTPUT_TYPE_SPLICE_JUNCTIONS.
+    JunctionData junction_data = 4;
+
+    // Gene expression data for the output. This is only set for
+    // OUTPUT_TYPE_SC_GENE_EXPRESSION.
+    GeneExpressionData gene_expression_data = 5;
+
+    // Cell embeddings for the output. This is only set for
+    // OUTPUT_TYPE_CELL_EMBEDDINGS.
+    CellEmbeddings cell_embeddings = 6;
+  }
+}
+
+// Message containing metadata for a single scored CpG site.
+message CpgScorerMetadata {
+  // Absolute genomic position of the C in the CG dinucleotide.
+  int64 position = 1;
+}
+
+// Message containing metadata for an interval prediction.
+message IntervalMetadata {
+  // Genomic interval.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 1;
+
+  // Track metadata for the interval prediction.
+  repeated TrackMetadata track_metadata = 2;
+
+  // Gene metadata for the interval prediction.
+  repeated google.gdm.gdmscience.alphagenome.v1main.GeneScorerMetadata
+      gene_metadata = 3;
+}
+
+// Message for storing interval values and metadata.
+message IntervalData {
+  // Values for the interval.
+  google.gdm.gdmscience.alphagenome.v1main.Tensor values = 1;
+
+  // Metadata for the interval.
+  IntervalMetadata metadata = 2;
+}
+
+// Message containing metadata for a variant prediction.
+message VariantMetadata {
+  // Genomic variant.
+  google.gdm.gdmscience.alphagenome.v1main.Variant variant = 1;
+
+  // Track metadata for the variant prediction.
+  repeated TrackMetadata track_metadata = 2;
+
+  // Gene metadata for the variant prediction. Mutually exclusive with
+  // `cpg_metadata`: at most one of the two may be non-empty.
+  repeated google.gdm.gdmscience.alphagenome.v1main.GeneScorerMetadata
+      gene_metadata = 3;
+
+  // CpG metadata for the variant prediction. Mutually exclusive with
+  // `gene_metadata`: at most one of the two may be non-empty.
+  repeated CpgScorerMetadata cpg_metadata = 4;
+}
+
+// Message for storing variant values and metadata.
+message VariantData {
+  // Values for the variant.
+  google.gdm.gdmscience.alphagenome.v1main.Tensor values = 1;
+
+  // Metadata for the variant.
+  VariantMetadata metadata = 2;
+}
+
+// Message for storing score interval results.
+message ScoreIntervalOutput {
+  // Score interval data.
+  IntervalData interval_data = 1;
+}
+
+// Message for storing score variant results.
+message ScoreVariantOutput {
+  // Score variant data.
+  VariantData variant_data = 1;
+}
+
+// Enumeration of all the available types of outputs.
+enum OutputType {
+  // Unspecified output type.
+  OUTPUT_TYPE_UNSPECIFIED = 0;
+
+  // ATAC-seq tracks capturing chromatin accessibility.
+  OUTPUT_TYPE_ATAC = 1;
+
+  // CAGE (Cap Analysis of Gene Expression) tracks capturing gene expression.
+  OUTPUT_TYPE_CAGE = 2;
+
+  // DNase I hypersensitive site tracks capturing chromatin accessibility.
+  OUTPUT_TYPE_DNASE = 3;
+
+  // RNA sequencing tracks capturing gene expression.
+  OUTPUT_TYPE_RNA_SEQ = 4;
+
+  // ChIP-seq tracks capturing histone modifications.
+  OUTPUT_TYPE_CHIP_HISTONE = 5;
+
+  // ChIP-seq tracks capturing transcription factor binding.
+  OUTPUT_TYPE_CHIP_TF = 6;
+
+  // Splice site tracks capturing donor and acceptor splice sites.
+  OUTPUT_TYPE_SPLICE_SITES = 7;
+
+  // Splice site usage tracks capturing the fraction of the time that each
+  // splice site is used.
+  OUTPUT_TYPE_SPLICE_SITE_USAGE = 8;
+
+  // Splice junction tracks capturing split read RNA-seq counts for each
+  // junction.
+  OUTPUT_TYPE_SPLICE_JUNCTIONS = 9;
+
+  // Contact map tracks capturing 3D DNA-DNA contact probabilities.
+  OUTPUT_TYPE_CONTACT_MAPS = 10;
+
+  // Single-cell RNA-seq gene expression.
+  OUTPUT_TYPE_SC_GENE_EXPRESSION = 11;
+
+  // Single-cell ATAC-seq tracks capturing chromatin accessibility.
+  OUTPUT_TYPE_SC_ATAC = 12;
+
+  // Single-cell gene expression denoised by the cell encoder.
+  OUTPUT_TYPE_SC_GENE_EXPRESSION_DENOISED = 13;
+
+  // Per-cell latent embeddings produced by the cell encoder.
+  OUTPUT_TYPE_CELL_EMBEDDINGS = 14;
+
+  // DNA methylation tracks capturing CpG methylation probabilities.
+  OUTPUT_TYPE_METHYLATION = 15;
+}
+
+// Enum indicating the type of interval scorer aggregation.
+enum IntervalAggregationType {
+  // Unspecified aggregation type.
+  INTERVAL_AGGREGATION_TYPE_UNSPECIFIED = 0;
+
+  // Mean across positions.
+  INTERVAL_AGGREGATION_TYPE_MEAN = 1;
+
+  // Sum across positions.
+  INTERVAL_AGGREGATION_TYPE_SUM = 2;
+}
+
+// Enum indicating the type of variant scorer aggregation.
+enum AggregationType {
+  // Unspecified aggregation type.
+  AGGREGATION_TYPE_UNSPECIFIED = 0;
+
+  // Difference of means, i.e., mean(ALT) - mean(REF).
+  AGGREGATION_TYPE_DIFF_MEAN = 1;
+
+  // Difference of sums, i.e., sum(ALT) - sum(REF).
+  AGGREGATION_TYPE_DIFF_SUM = 2;
+
+  // Log scales predictions, then takes the sum and then the difference, i.e.
+  // sum(log2(ALT)) - sum(log2(REF)).
+  AGGREGATION_TYPE_DIFF_SUM_LOG2 = 3;
+
+  // Takes the difference of ALT and REF predictions, then computes the L2 norm,
+  // i.e., l2_norm(ALT - REF).
+  AGGREGATION_TYPE_L2_DIFF = 4;
+
+  // Log scales the predictions + 1, takes the difference of `ALT` and `REF`
+  // predictions, then computes the L2 norm, i.e., l2_norm(log1p(`ALT`) -
+  // log1p(`REF`)).
+  AGGREGATION_TYPE_L2_DIFF_LOG1P = 8;
+
+  // Takes the sum of predictions, applies a log transform, then takes the
+  // difference between predictions, i.e., log2(sum(ALT)) - log2(sum(REF)).
+  AGGREGATION_TYPE_DIFF_LOG2_SUM = 5;
+
+  // Maximum of means, i.e., max(mean(ALT), mean(REF)).
+  AGGREGATION_TYPE_ACTIVE_MEAN = 6;
+
+  // Maximum of sums, i.e., max(sum(ALT), sum(REF)).
+  AGGREGATION_TYPE_ACTIVE_SUM = 7;
+}
+
+// Interval scorer message for gene-mask scoring.
+message GeneMaskIntervalScorer {
+  // Requested output type.
+  OutputType requested_output = 1;
+
+  // Requested width.
+  int64 width = 2;
+
+  // Requested aggregation type.
+  IntervalAggregationType aggregation_type = 3;
+}
+
+// Container message for all interval scorers.
+message IntervalScorer {
+  // The interval scorer payload.
+  oneof scorer {
+    // Gene mask scorer.
+    GeneMaskIntervalScorer gene_mask = 1;
+  }
+}
+
+// Variant scorer message for center mask scoring.
+message CenterMaskScorer {
+  // The width of the mask around the variant.
+  optional int64 width = 1;
+
+  // The aggregation type.
+  AggregationType aggregation_type = 2;
+
+  // Requested output type.
+  OutputType requested_output = 3;
+}
+
+// Variant scorer message for gene-mask scoring based on log fold change.
+message GeneMaskLFCScorer {
+  // Requested output type.
+  OutputType requested_output = 1;
+
+  // The aggregation type.
+  AggregationType aggregation_type = 2;
+}
+
+// Variant scorer message for gene-mask scoring based on active allele counts.
+message GeneMaskActiveScorer {
+  // Requested output type.
+  OutputType requested_output = 1;
+}
+
+// Variant scorer message for gene-mask scoring for splicing.
+message GeneMaskSplicingScorer {
+  // The width of the mask around the variant.
+  optional int64 width = 1;
+
+  // Requested output type.
+  OutputType requested_output = 2;
+}
+
+// Variant scorer message for polyadenylation QTLs (paQTLs).
+message PolyadenylationScorer {}
+
+// Variant scorer message for splice junction scoring.
+message SpliceJunctionScorer {}
+
+// Variant scorer message for contact map scoring.
+message ContactMapScorer {}
+
+// Variant scorer message for per-CpG methylation scoring.
+message MethylationScorer {
+  // The width of the window around the variant within which CpG sites are
+  // scored.
+  optional int64 width = 1;
+}
+
+// Container message for all variant scorers.
+message VariantScorer {
+  // The variant scorer payload.
+  oneof scorer {
+    // Center mask scorer.
+    CenterMaskScorer center_mask = 1;
+
+    // Gene mask scorer based on log fold change.
+    GeneMaskLFCScorer gene_mask = 2;
+
+    // Gene mask scorer for splicing.
+    GeneMaskSplicingScorer gene_mask_splicing = 3;
+
+    // Polyadenylation scorer.
+    PolyadenylationScorer pa_qtl = 4;
+
+    // Splice junction scorer.
+    SpliceJunctionScorer splice_junction = 5;
+
+    // Contact map scorer.
+    ContactMapScorer contact_map = 6;
+
+    // Gene mask scorer based on active allele counts.
+    GeneMaskActiveScorer gene_mask_active = 7;
+
+    // Per-CpG methylation scorer.
+    MethylationScorer methylation = 8;
+  }
+}
+
+// Message containing observed metadata for an output type.
+message ObservedMetadata {
+  // The output type.
+  OutputType output_type = 1;
+
+  // The payload for the output metadata.
+  oneof payload {
+    // Track metadata for the output. Used in all output types except
+    // OUTPUT_TYPE_SPLICE_JUNCTIONS.
+    TracksMetadata tracks = 2;
+
+    // Junction metadata for the output. This is only set for
+    // OUTPUT_TYPE_SPLICE_JUNCTIONS.
+    JunctionsMetadata junctions = 3;
+  }
+}
+
+// Message containing imputation mode for an output type.
+message OutputTypeImputationMode {
+  // The output type.
+  OutputType output_type = 1;
+
+  // The imputation mode for this output type.
+  string imputation_mode = 2;
+}
+
+// Sparse gene expression counts for a single cell. Indices and counts
+// are parallel arrays of the same length.
+message GeneCounts {
+  // Column indices into the shared gene_ids array for non-zero entries.
+  // Each index must be in [0, len(gene_ids)).
+  repeated int32 gene_indices = 1;
+
+  // UMI count values corresponding to each gene index. All values must
+  // be > 0. Same length as gene_indices.
+  repeated int32 gene_counts = 2;
+}
+
+// Per-cell single-cell gene expression conditioning input.
+// Gene IDs are shared across all cells and sent once.
+message CellConditioningInput {
+  // Per-cell sparse gene expression counts.
+  repeated GeneCounts cells = 1;
+
+  // ENSEMBL gene IDs without version suffix (e.g. "ENSG00000139618").
+  // Shared across all cells — defines the column space.
+  repeated string gene_ids = 2;
+}
+
+// Per-cell latent embeddings produced by the cell encoder, returned alongside
+// predictions for downstream analysis.
+message CellEmbeddings {
+  // Flat 2D array of cell embeddings, shape (num_cells, latent_dim).
+  google.gdm.gdmscience.alphagenome.v1main.Tensor values = 1;
+}
+
+// Message containing information about a supported condition.
+message SupportedCondition {
+  // The condition.
+  Condition condition = 1;
+
+  // The biosample.
+  google.gdm.gdmscience.alphagenome.v1main.Biosample biosample = 2;
+
+  // The imputation mode for each output type.
+  repeated OutputTypeImputationMode output_type_imputation_modes = 3;
+}
+
+// Target for computing input gradients with respect to a gene's predicted
+// expression. The objective is the log of the gene's prediction averaged over
+// the selected tracks (for RNA_SEQ, summed over the gene's exon positions).
+// Selected tracks are those on the gene's strand or unstranded, restricted to
+// observed tracks for the requested condition if there are any.
+message InputGradientTarget {
+  // Output type to compute gradients for. Supported: OUTPUT_TYPE_RNA_SEQ,
+  // OUTPUT_TYPE_SC_GENE_EXPRESSION and OUTPUT_TYPE_SC_GENE_EXPRESSION_DENOISED.
+  OutputType output_type = 1;
+
+  // Ensembl gene ID without version suffix (e.g. "ENSG00000139618").
+  string gene_id = 2;
+}
+
+// Message for storing input gradients (sequence attribution) and metadata.
+message InputGradientsOutput {
+  // Input gradients of shape [sequence_length, 4] (float32) across nucleotides
+  // (A, C, G, T). Gradients are mean-centered across nucleotides and multiplied
+  // by the one-hot input sequence, so only the reference nucleotide is non-zero
+  // at each position. Summing over nucleotides gives per-position scores.
+  google.gdm.gdmscience.alphagenome.v1main.Tensor gradients = 1;
+
+  // The output type head for which gradients were computed.
+  OutputType output_type = 2;
+
+  // Genomic interval corresponding to the sequence.
+  google.gdm.gdmscience.alphagenome.v1main.Interval interval = 3;
+
+  // Metadata of the target gene.
+  GeneExpressionMetadata gene_metadata = 4;
+
+  // Metadata for the tracks aggregated in the gradient target.
+  repeated TrackMetadata track_metadata = 5;
+
+  // Forward-pass scalar objective value (before differentiation) used to
+  // compute gradients: log(mean_t(y_{g,t}) + 1e-6) for gene expression heads
+  // (or log(sum_{s in exons(g)} mean_t(y_{s,t}) + 1e-6) for RNA_SEQ), where
+  // the mean is taken over the selected tracks in track_metadata.
+  float scalar_score = 6;
+}

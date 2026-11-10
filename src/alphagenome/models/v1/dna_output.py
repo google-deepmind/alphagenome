@@ -42,7 +42,7 @@ class OutputType(enum.Enum):
       time that each splice site is used.
     SPLICE_JUNCTIONS: Splice junction tracks capturing split read RNA-seq counts
       for each junction.
-    CONTACT_MAPS: Contact map tracks capturing 3D DNA-DNA contact probabilities.
+    CONTACT_MAPS: Contact map tracks capturing 3D DNA-DNA contact frequencies.
     PROCAP: Precision Run-On sequencing and capping, used to measure gene
       expression.
   """
@@ -86,7 +86,7 @@ class Output:
     chip_tf: TrackData of type OutputType.CHIP_TF.
     splice_sites: TrackData of type OutputType.SPLICE_SITES.
     splice_site_usage: TrackData of type OutputType.SPLICE_SITE_USAGE.
-    splice_junctions: TrackData of type OutputType.SPLICE_JUNCTIONS.
+    splice_junctions: JunctionData of type OutputType.SPLICE_JUNCTIONS.
     contact_maps: TrackData of type OutputType.CONTACT_MAPS.
     procap: TrackData of type OutputType.PROCAP.
   """

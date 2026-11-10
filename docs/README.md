@@ -1,6 +1,11 @@
-AlphaGenome API is a service that provides comprehensive and accurate AI
-predictions for genome interpretation.
+# AlphaGenome docs
 
-AlphaGenome is a deep learning genomics model that takes a genomic (DNA)
-sequence as input and predicts various molecular properties of DNA & RNA, many
-at single base pair resolution.
+To build the docs locally from the repository root:
+
+```shell
+$ pip install -e ".[docs]"
+$ mkdir -p docs/source/colabs && cp -r colabs/* docs/source/colabs/
+$ sphinx-build -b html --keep-going docs/source docs/build/html
+```
+
+Then open `docs/build/html/index.html` in a browser.

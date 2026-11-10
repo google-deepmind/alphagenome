@@ -200,6 +200,24 @@ class JunctionData:
       )
     return self.filter_tracks(self.metadata['ontology_curie'] == ontology_curie)
 
+  def filter_to_observed(self) -> 'JunctionData':
+    """Filters tracks to observed tracks.
+
+    Returns:
+      A new `JunctionData` object with only observed tracks.
+
+    Raises:
+      ValueError: If 'imputation_mode' is not in metadata columns.
+    """
+    if 'imputation_mode' not in self.metadata.columns:
+      raise ValueError(
+          "Column 'imputation_mode' not found in metadata. Available columns:"
+          f' {list(self.metadata.columns)}'
+      )
+    return self.filter_tracks(
+        (self.metadata['imputation_mode'] == 'observed').values
+    )
+
   def intersect_with_interval(
       self, interval: genome.Interval
   ) -> 'JunctionData':

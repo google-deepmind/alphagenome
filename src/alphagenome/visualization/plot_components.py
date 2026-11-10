@@ -26,7 +26,9 @@ Three main elements are:
 
 import abc
 from collections.abc import Mapping, Sequence
+import dataclasses
 
+from alphagenome.data import gene_expression_data
 from alphagenome.data import genome
 from alphagenome.data import junction_data
 from alphagenome.data import track_data
@@ -43,6 +45,7 @@ from matplotlib import patches as mpatches
 from matplotlib import ticker as mticker
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 # String, RGB or RGBA color.
 _ColorType = (
@@ -471,7 +474,7 @@ class OverlaidTracks(AbstractComponent):
       alpha: float = 0.8,
       order_tdata_by_mean: bool = True,
       max_num_tracks: int = 50,
-      legend_loc: str = 'upper right',
+      legend_loc: str | None = 'upper right',
       **kwargs,
   ):
     """Initializes the `OverlaidTracks` component.
@@ -1344,7 +1347,7 @@ class FeatureContribution(AbstractComponent):
       axis_index: int,
       interval: genome.Interval,
   ):
-    """Plots the stacked SHAP bar chart on the given axis.
+    """Plots the bar chart on the given axis.
 
     Args:
       ax: The matplotlib axis to plot on.
@@ -1816,3 +1819,467 @@ class VariantAnnotation(AbstractAnnotation):
             label_height_factor=label_height_factor,
             label_position=self._label_position,
         )
+
+
+class EnhancerArcs(AbstractComponent):
+  """Component for visualizing enhancer-to-gene links as cubic Bezier arcs."""
+
+  def __init__(
+      self,
+      links: pd.DataFrame,
+      tss: int | None = None,
+      *,
+      upward: bool = True,
+      fig_height: float = 1.0,
+      ylabel: str = '',
+      ylabel_horizontal: bool = True,
+      **kwargs,
+  ):
+    """Initializes the `EnhancerArcs` component.
+
+    Args:
+      links: DataFrame of enhancer-to-gene links.
+      tss: Target gene TSS coordinate; if None, uses `tss_col` from `links`.
+      upward: If True, arcs curve upward (`y >= 0`); otherwise downward.
+      fig_height: Height of the component axis.
+      ylabel: Optional y-axis label.
+      ylabel_horizontal: Whether to orient `ylabel` horizontally.
+      **kwargs: Additional keyword arguments forwarded to
+        `plot.enhancer_arcs_plot` (e.g. `interval_contained`, `gene_id`,
+        `start_col`, `end_col`, `peak_col`, `tss_col`, `score_col`, `color`,
+        `cmap`, `vmin`, `vmax`, `alpha_range`, `linewidth_range`).
+    """
+    self._links = links
+    self._tss = tss
+    self._upward = upward
+    self._fig_height = fig_height
+    self._ylabel = ylabel
+    self._ylabel_horizontal = ylabel_horizontal
+    self._kwargs = kwargs
+
+  def get_ax_height(self, axis_index: int) -> float:
+    """Returns the height of the axis."""
+    del axis_index
+    return self._fig_height
+
+  @property
+  def num_axes(self) -> int:
+    """Returns the number of matplotlib axes required by the component."""
+    return 1
+
+  def plot_ax(
+      self, ax: matplotlib.axes.Axes, axis_index: int, interval: genome.Interval
+  ):
+    """Plots the enhancer-to-gene arcs on the given axis.
+
+    Args:
+      ax: The matplotlib axis to plot on.
+      axis_index: The index of the axis.
+      interval: The genomic interval to plot.
+    """
+    del axis_index
+    plot_lib.enhancer_arcs_plot(
+        self._links,
+        ax=ax,
+        tss=self._tss,
+        interval=interval,
+        upward=self._upward,
+        **self._kwargs,
+    )
+    ax.set_yticks([])  # pyrefly: ignore[not-callable]
+    ax.set_yticklabels([])  # pyrefly: ignore[not-callable]
+    ax.spines['left'].set_visible(False)
+    if self._ylabel:
+      _set_ylabel(ax, self._ylabel, self._ylabel_horizontal)
+
+
+class GeneExpression(AbstractComponent):
+  """Component for visualizing scalar gene expression.
+
+  Used to visualize gene-level predictions for denoised single-cell gene
+  expression (`SC_GENE_EXPRESSION_DENOISED`; one channel per strand, in CPM) and
+  `SC_GENE_EXPRESSION`.
+  """
+
+  def __init__(
+      self,
+      gdata: gene_expression_data.GeneExpressionData,
+      show_value: bool = True,
+      cmap: str = 'viridis',
+      truncate_cmap: bool = True,
+      track_height: float = 1.0,
+      filled: bool = False,
+      ylabel_template: str = '{name}:{strand}',
+      ylabel_horizontal: bool = True,
+      shared_y_scale: bool = False,
+      global_ylims: tuple[float, float] | None = None,
+      log_scale: bool = False,
+      track_colors: Sequence[_ColorType] | str | None = None,
+      **kwargs,
+  ):
+    """Initializes the `GeneExpression` component.
+
+    Args:
+      gdata: The `GeneExpressionData` object to visualize.
+      show_value: Whether to show the value of the gene expression.
+      cmap: The colormap to use for the tracks.
+      truncate_cmap: Whether to slightly truncate the colormap to avoid extreme
+        values.
+      track_height: The height of each track.
+      filled: Whether to fill the area under the tracks.
+      ylabel_template: A template for the y-axis labels.
+      ylabel_horizontal: Whether to make the y-axis labels horizontal.
+      shared_y_scale: Whether to use the same y-axis scale for all tracks.
+      global_ylims: Optional global y-axis limits (min and max).
+      log_scale: Whether to use a log scale for the y-axis.
+      track_colors: An optional sequence of colors to use for the tracks. If a
+        string is passed, it is used as a single color for all tracks. If a
+        sequence is passed, its length must match the number of tracks.
+      **kwargs: Additional keyword arguments to pass to the plotting function.
+    """
+    self._num_tracks = gdata.values.shape[-1]
+    self._track_height = track_height
+    self._filled = filled
+    self._ylabel_horizontal = ylabel_horizontal
+    self._ylabel_template = ylabel_template
+    self._shared_y_scale = shared_y_scale
+    self._global_ylims = global_ylims
+    self._kwargs = kwargs
+    self._gdata_interval = gdata.interval
+    self._log_scale = log_scale
+    self._show_value = show_value
+
+    if self._log_scale:
+      self._gdata = dataclasses.replace(gdata, values=np.log1p(gdata.values))
+    else:
+      self._gdata = gdata
+
+    colormap = plt.get_cmap(cmap)
+    num_track_sets = self._num_tracks
+    if truncate_cmap:
+      # We do *1.2 to make the color change more gradual. This means that the
+      # the upper range of the cmap is never displayed, which often tends to
+      # achieve nicer results aesthetically.
+      self._colors = colormap(np.linspace(0, 1, round(num_track_sets * 1.2)))
+    else:
+      self._colors = colormap(np.linspace(0, 1, num_track_sets))
+
+    if track_colors is not None:
+      if isinstance(track_colors, str):
+        self._colors = [track_colors] * num_track_sets
+      elif len(track_colors) == 1:
+        self._colors = track_colors * num_track_sets
+      elif len(track_colors) != num_track_sets:
+        raise ValueError(
+            f'track_colors argument (length: {len(track_colors)}) must be'
+            ' either a single color, or the same number of track sets provided'
+            f' in the tdata ({num_track_sets}).'
+        )
+      else:
+        self._colors = track_colors
+
+  def get_ax_height(self, axis_index: int) -> float:
+    """Returns the height of the axis."""
+    del axis_index  # Unused.
+    return self._track_height
+
+  @property
+  def num_axes(self) -> int:
+    """Returns the number of matplotlib axes required by the component."""
+    return self._num_tracks
+
+  def plot_ax(
+      self,
+      ax: matplotlib.axes.Axes,
+      axis_index: int,
+      interval: genome.Interval,
+  ):
+    """Plots the tracks on the given axis.
+
+    Args:
+      ax: The matplotlib axis to plot on.
+      axis_index: The index of the axis.
+      interval: The genomic interval to plot.
+    """
+    gdata = self._gdata
+    if interval != self._gdata_interval:
+      gdata = self._gdata.slice_by_interval(interval)
+
+    gene_intervals = gdata.get_genes_as_intervals()
+
+    # Get the gdata for the current axis.
+    axis_gdata = gdata[:, axis_index]
+
+    # Same shared y-axis limits across all tracks.
+    if self._shared_y_scale:
+      if self._global_ylims is not None:
+        ax.set_ylim(self._global_ylims)
+      else:
+        ax.set_ylim(0, 1.1 * gdata.values.max())
+    else:
+      ax.set_ylim(0, 1.1 * axis_gdata.values.max())
+
+    # Set the colour of this track.
+    track_color = self._colors[axis_index]
+
+    # Iterate over genes and plot a horizontal line at the value in .X
+    ax.set_xlim([interval.start, interval.end])
+    for i, gene_interval in enumerate(gene_intervals):
+      start = max(gene_interval.start, interval.start)
+      end = min(gene_interval.end, interval.end)
+      height = np.array(axis_gdata.values[i])[0]
+      if self._filled:
+        ax.fill_between(
+            [start, end],
+            [height, height],
+            color=track_color,
+            **self._kwargs,
+        )
+      else:
+        ax.hlines(
+            height,
+            start,
+            end,
+            color=track_color,
+            linestyle='-',
+            **self._kwargs,
+        )
+        # Add a point at the gene interval start.
+        ax.scatter(
+            [start, end],
+            [height] * 2,
+            color=track_color,
+            s=8,
+            **self._kwargs,
+        )
+      if self._show_value:
+        ax.text(
+            (start + end) // 2,
+            height,
+            f'{float(height):.2f}',
+            color=track_color,
+            horizontalalignment='center',
+            verticalalignment='center',
+            backgroundcolor='w',
+        )
+
+    if self._ylabel_template:
+      _set_ylabel(ax, self._get_ylabel(axis_index), self._ylabel_horizontal)
+
+  def _get_ylabel(self, axis_index: int) -> str:
+    """Returns the y-axis label for the given axis index."""
+    row = self._gdata.track_metadata.iloc[axis_index]
+    return self._ylabel_template.format(**row.to_dict())
+
+
+class OverlaidGeneExpression(AbstractComponent):
+  """Component for visualizing overlaid scalar gene expression.
+
+  Used to visualize overlaid gene-level predictions for denoised single-cell
+  gene expression (`SC_GENE_EXPRESSION_DENOISED`; one channel per strand, in
+  CPM) and `SC_GENE_EXPRESSION`.
+  """
+
+  def __init__(
+      self,
+      gdata: Mapping[str, gene_expression_data.GeneExpressionData],
+      show_value: bool = True,
+      colors: Mapping[str, str] | None = None,
+      log_scale: bool = False,
+      cmap: str | None = 'viridis',
+      track_height: float = 1.0,
+      ylabel_template: str = '{name}:{strand}',
+      ylabel_horizontal: bool = True,
+      shared_y_scale: bool = False,
+      global_ylims: tuple[float, float] | None = None,
+      alpha: float = 0.8,
+      legend_loc: str | None = 'upper right',
+      **kwargs,
+  ):
+    """Initializes the `OverlaidGeneExpression` component.
+
+    Args:
+      gdata: A mapping from names to `GeneExpressionData` objects.
+      show_value: Whether to show the value of the gene expression.
+      colors: An optional dictionary mapping keys in `gdata` to colors.
+      log_scale: Whether to use a log scale for the gene expression values.
+      cmap: The colormap to use if `colors` is not provided.
+      track_height: The height of each track.
+      ylabel_template: A template for the y-axis labels.
+      ylabel_horizontal: Whether to make the y-axis labels horizontal.
+      shared_y_scale: Whether to use the same y-axis scale for all tracks.
+      global_ylims: Optional global y-axis limits (min and max).
+      alpha: The transparency of the plotted lines/points.
+      legend_loc: The location of the legend (such as 'upper left' or 'best').
+        See the matplotlib Axes legend documentation for more details and
+        options. If None, no legend is shown.
+      **kwargs: Additional keyword arguments to pass to the plotting function.
+
+    Raises:
+      ValueError: If the shapes or track metadata of the `gdata` values do not
+        match, or if the genome intervals in `gdata` do not match, or if
+        `colors` are provided but do not match the keys in `gdata`.
+    """
+    self._gdata = gdata
+    self._colors = colors
+    self._track_height = track_height
+    self._ylabel_horizontal = ylabel_horizontal
+    self._ylabel_template = ylabel_template
+    self._shared_y_scale = shared_y_scale
+    self._global_ylims = global_ylims
+    self._kwargs = kwargs
+    self._alpha = alpha
+    self._log_scale = log_scale
+    self._legend_loc = legend_loc
+    self._show_value = show_value
+    self._first_gdata = list(gdata.values())[0]
+    self._gdata_interval = self._first_gdata.interval
+    self._cmap = cmap
+
+    if self._log_scale:
+      self._gdata = {
+          k: dataclasses.replace(v, values=np.log1p(v.values))
+          for k, v in self._gdata.items()
+      }
+    else:
+      self._gdata = gdata
+
+    if len(set(data.values.shape for data in gdata.values())) != 1:
+      raise ValueError('Shapes of track data values must be the same.')
+
+    if not all(
+        self._first_gdata.track_metadata.equals(data.track_metadata)
+        for data in gdata.values()
+    ):
+      raise ValueError('track_metadata of gdata values must be the same.')
+
+    for g in gdata.values():
+      if g.interval != self._first_gdata.interval:
+        raise ValueError('genome.Interval of gdata must be the same.')
+
+    # If a colors dict is passed, then there should be a matching color for each
+    # track data name.
+    if self._colors is not None:
+      if self._gdata.keys() != self._colors.keys():
+        raise ValueError(
+            'If passing colors, each gdata name'
+            f' {list(self._gdata.keys())} must have an associated color.'
+        )
+    # Otherwise, we define a color from a cmap.
+    else:
+      colormap = plt.get_cmap(self._cmap)
+      cmap_colors = colormap(np.linspace(0, 1, len(self._gdata)))
+      self._colors = dict(zip(self._gdata.keys(), cmap_colors))
+
+    if self._log_scale:
+      self._gdata = {
+          k: dataclasses.replace(v, values=np.log1p(v.values))
+          for k, v in self._gdata.items()
+      }
+
+    if self._shared_y_scale:
+      # We compute min and max over all the track data arrays in the tdata dict.
+      all_values = np.stack([arr.values for arr in self._gdata.values()])
+      self._vmin = 0
+      self._vmax = np.max(all_values)
+
+  def get_ax_height(self, axis_index: int) -> float:
+    """Returns the height of the axis."""
+    del axis_index  # Unused.
+    return self._track_height
+
+  @property
+  def num_axes(self) -> int:
+    """Returns the number of matplotlib axes required by the component."""
+    return self._first_gdata.values.shape[-1]
+
+  def plot_ax(
+      self,
+      ax: matplotlib.axes.Axes,
+      axis_index: int,
+      interval: genome.Interval,
+  ):
+    """Plots the tracks on the given axis.
+
+    Args:
+      ax: The matplotlib axis to plot on.
+      axis_index: The index of the axis.
+      interval: The genomic interval to plot.
+    """
+
+    gdata_sliced = {
+        k: v.slice_by_interval(interval) for k, v in self._gdata.items()
+    }
+    gene_intervals = list(gdata_sliced.values())[0].get_genes_as_intervals()
+
+    assert self._colors is not None
+    # Iterate over genes and plot a horizontal line at the value in .X
+    ax.set_xlim([interval.start, interval.end])
+    y_max = 1e-7  # To avoid a y-axis range of [0, 0] when all values are 0.
+    for i, gene_interval in enumerate(gene_intervals):
+      start = max(gene_interval.start, interval.start)
+      end = min(gene_interval.end, interval.end)
+      for name, gd in gdata_sliced.items():
+        axis_gd = gd[:, axis_index]
+        height = np.array(axis_gd.values[i])[0]
+        y_max = max(y_max, height)
+        ax.hlines(
+            height,
+            start,
+            end,
+            alpha=self._alpha,
+            color=self._colors[name],
+            linestyle='-',
+            label=name,
+            **self._kwargs,
+        )
+        # Add a point at the gene interval start.
+        ax.scatter(
+            [start, end],
+            [height] * 2,
+            alpha=self._alpha,
+            color=self._colors[name],
+            s=8,
+            **self._kwargs,
+        )
+        if self._show_value:
+          ax.text(
+              (start + end) // 2,
+              height,
+              f'{float(height):.2f}',
+              color=self._colors[name],
+              horizontalalignment='center',
+              verticalalignment='center',
+              backgroundcolor='w',
+          )
+
+      if self._shared_y_scale:
+        if self._global_ylims is not None:
+          ax.set_ylim(self._global_ylims)
+        else:
+          ax.set_ylim(self._vmin, self._vmax)
+      else:
+        ax.set_ylim(0, 1.1 * y_max)
+
+    if axis_index == 0 and self._legend_loc is not None:
+      handles = [
+          matplotlib.lines.Line2D(
+              [],
+              [],
+              color=self._colors[name],
+          )
+          for name in self._gdata
+      ]
+      ax.legend(
+          handles=handles,
+          labels=list(self._gdata.keys()),
+          loc=self._legend_loc,
+      )
+
+    if self._ylabel_template:
+      _set_ylabel(ax, self._get_ylabel(axis_index), self._ylabel_horizontal)
+
+  def _get_ylabel(self, axis_index: int) -> str:
+    """Returns the y-axis label for the given axis index."""
+    row = self._first_gdata.track_metadata.iloc[axis_index]
+    return self._ylabel_template.format(**row.to_dict())
