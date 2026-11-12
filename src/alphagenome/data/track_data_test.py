@@ -1001,6 +1001,29 @@ class TrackDataReverseComplementTest(parameterized.TestCase):
       # Not matching number of strands by name
       tdata.reverse_complement()
 
+  @parameterized.parameters([
+      dict(num_positional=0),
+      dict(num_positional=1),
+      dict(num_positional=2),
+  ])
+  def test_reverse_complement_raises_unmatched_name(self, num_positional: int):
+    values = (
+        np.arange(2**num_positional * 4)
+        .reshape([2] * num_positional + [4])
+        .astype(np.int32)
+    )
+    metadata = pd.DataFrame({
+        'name': ['first', 'first', 'third', 'fourth'],
+        'strand': ['+', '-', '+', '-'],
+        'other': ['foo', 'foo', 'bar', 'baz'],
+    })
+    tdata = track_data.TrackData(values, metadata, resolution=2)
+    with self.assertRaises(ValueError):
+      # The strand counts are balanced overall (two + and two -), but only
+      # "first" has both strands under the same name. "third" and "fourth"
+      # each appear on a single strand, so they cannot be paired.
+      tdata.reverse_complement()
+
 
 class TrackDataConcatTest(parameterized.TestCase):
 
