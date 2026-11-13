@@ -409,11 +409,12 @@ class Interval:
     if self.width < 0:
       raise ValueError('Resulting interval has negative length')
 
-  def resize(self, width: int, use_strand: bool = True) -> Self:
+  def resize(self, width: int | None, use_strand: bool = True) -> Self:
     """Resizes the interval to a new width, centered around the original center.
 
     Args:
-      width: The new width of the interval.
+      width: The new width of the interval. None leaves the interval
+        unchanged.
       use_strand: If True, resizing considers the strand orientation.
 
     Returns:
@@ -423,18 +424,19 @@ class Interval:
     obj.resize_inplace(width, use_strand)
     return obj
 
-  def resize_inplace(self, width: int, use_strand: bool = True) -> None:
+  def resize_inplace(self, width: int | None, use_strand: bool = True) -> None:
     """Resizes the interval in place, centered around the original center.
 
     Args:
-      width: The new width of the interval.
+      width: The new width of the interval. None leaves the interval
+        unchanged.
       use_strand: If True, resizing considers the strand orientation.
     """
-    if width < 0:
-      raise ValueError(f'Width needs to be > 0. Found: {width}.')
-
     if width is None or self.width == width:
       return
+
+    if width < 0:
+      raise ValueError(f'Width needs to be > 0. Found: {width}.')
 
     center = self.center()
     if use_strand and self.negative_strand:
