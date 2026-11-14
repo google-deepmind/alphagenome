@@ -5,6 +5,8 @@
 ![PyPI Python version](https://img.shields.io/pypi/pyversions/AlphaGenome)
 ![Presubmit Checks](https://github.com/google-deepmind/alphagenome/actions/workflows/presubmit_checks.yml/badge.svg)
 
+[ English | [简体中文](https://github.com/google-deepmind/alphagenome/blob/main/README.zh.md) ]
+
 [**Get API key**](https://alphagenome.google/api) |
 [**Installation**](#installation) | [**Quick start**](#quick-start) |
 [**Documentation**](https://www.alphagenomedocs.com/) |
