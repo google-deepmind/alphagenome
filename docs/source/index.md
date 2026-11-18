@@ -37,18 +37,19 @@ html_theme.sidebar_secondary.remove: true
 :shadow: none
 :class-card: sd-border-0
 
-Our latest model. Improved cell-type specificity and generalizes to your own
-scRNA-seq data. Imputes unobserved modalities.
+Our latest model {cite:p}`alphagenome2`. Improved cell-type specificity and
+generalizes to your own scRNA-seq data. Imputes unobserved modalities.
 :::
 
 :::{grid-item-card} AlphaGenome Atlas
 :shadow: none
 :class-card: sd-border-0
 
-Genome-wide *in silico* mutagenesis across 9 billion variants, with
-pre-computed scores and the AlphaGenome Variant Impact (AVI) score for
-coding and non-coding variant prioritization. Available on a
-[zero-code website](https://alphagenome.google/atlas) and through the API.
+Genome-wide *in silico* mutagenesis across 9 billion variants
+{cite:p}`alphagenome_atlas`, with pre-computed scores and the AlphaGenome
+Variant Impact (AVI) score for coding and non-coding variant prioritization.
+Available on a [zero-code website](https://alphagenome.google/atlas) and through
+the API.
 :::
 
 :::{grid-item-card} AlphaGenome 1

@@ -69,22 +69,23 @@ AlphaGenome 1, the *Nature* paper, and the API.
 ## Publications
 
 <!-- mdformat off(Retain sphinx-design grid syntax.) -->
-::::{grid} 1 1 2 2
+::::{grid} 1 1 3 3
 :gutter: 3
 
-:::{grid-item-card} AlphaGenome
-:link: https://www.nature.com/articles/s41586-025-10014-0
+:::{grid-item-card} AlphaGenome 2
+:link: https://doi.org/10.64898/2026.11.11.765857
 :link-type: url
 
-{bdg-primary}`Paper` *Nature* · 2026
+{bdg-primary}`Preprint` *bioRxiv* · 2026
 ^^^
-**Advancing regulatory variant effect prediction with AlphaGenome**
+**AlphaGenome 2 predicts regulatory activity and variant effects across cell
+states**
 
-Avsec *et al.* Introduces AlphaGenome 1, a unified 1 Mb DNA sequence model, and
-benchmarks multimodal predictions and variant effect scoring across gene
-expression, splicing, chromatin features, and contact maps.
+Gayoso *et al.* Introduces AlphaGenome 2, extending 1 Mb multimodal sequence
+modeling with improved cell-type specificity, expression conditioning on
+scRNA-seq data, and cross-modality track imputation.
 +++
-{octicon}`link-external;0.9em;sd-mr-1` doi:10.1038/s41586-025-10014-0
+{octicon}`link-external;0.9em;sd-mr-1` doi:10.64898/2026.11.11.765857
 :::
 
 :::{grid-item-card} AlphaGenome Atlas
@@ -101,6 +102,21 @@ human variants and the AlphaGenome Variant Impact (AVI) score for variant
 prioritization.
 +++
 {octicon}`link-external;0.9em;sd-mr-1` doi:10.64898/2026.09.16.26363192
+:::
+
+:::{grid-item-card} AlphaGenome
+:link: https://www.nature.com/articles/s41586-025-10014-0
+:link-type: url
+
+{bdg-primary}`Paper` *Nature* · 2026
+^^^
+**Advancing regulatory variant effect prediction with AlphaGenome**
+
+Avsec *et al.* Introduces AlphaGenome 1, a unified 1 Mb DNA sequence model, and
+benchmarks multimodal predictions and variant effect scoring across gene
+expression, splicing, chromatin features, and contact maps.
++++
+{octicon}`link-external;0.9em;sd-mr-1` doi:10.1038/s41586-025-10014-0
 :::
 
 ::::

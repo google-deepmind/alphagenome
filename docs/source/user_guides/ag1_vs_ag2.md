@@ -9,9 +9,9 @@ from alphagenome.models.v1 import dna_client as dna_client_v1  # AlphaGenome 1
 
 ## When to use each model
 
-*   **Use AlphaGenome 2** for most analyses: predicting tracks or scoring
-    variants in a reference condition (`condition=`) or under expression
-    conditioning on your own human scRNA-seq count matrix
+*   **Use AlphaGenome 2** {cite:p}`alphagenome2` for most analyses: predicting
+    tracks or scoring variants in a reference condition (`condition=`) or under
+    expression conditioning on your own human scRNA-seq count matrix
     (`cell_conditioning=`), predicting single-cell accessibility (`SC_ATAC`),
     denoised single-cell gene expression (`SC_GENE_EXPRESSION_DENOISED`),
     protocol-specific single-cell gene expression (`SC_GENE_EXPRESSION`), or CpG

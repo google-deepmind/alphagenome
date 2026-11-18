@@ -167,21 +167,18 @@ or contact <alphagenome-cloud-external@google.com>.
 
 ### How should I cite AlphaGenome?
 
-If you use AlphaGenome in your research, please cite:
+If you use AlphaGenome 2 in your research, please cite:
 
 <!-- disableFinding(SNIPPET_INVALID_LANGUAGE) -->
 
 ```bibtex
-@article{alphagenome,
-  title={Advancing regulatory variant effect prediction with {AlphaGenome}},
-  author={Avsec, {\v Z}iga and Latysheva, Natasha and Cheng, Jun and Novati, Guido and Taylor, Kyle R. and Ward, Tom and Bycroft, Clare and Nicolaisen, Lauren and Arvaniti, Eirini and Pan, Joshua and Thomas, Raina and Dutordoir, Vincent and Perino, Matteo and De, Soham and Karollus, Alexander and Gayoso, Adam and Sargeant, Toby and Mottram, Anne and Wong, Lai Hong and Drot{\'a}r, Pavol and Kosiorek, Adam and Senior, Andrew and Tanburn, Richard and Applebaum, Taylor and Basu, Souradeep and Hassabis, Demis and Kohli, Pushmeet},
-  journal={Nature},
-  volume={649},
-  number={8099},
-  pages={1206--1218},
+@article{alphagenome2,
+  title={{AlphaGenome} 2 predicts regulatory activity and variant effects across cell states},
+  author={Gayoso, Adam and Mottram, Anne and Karollus, Alexander and Novati, Guido and Drot{\'a}r, Pavol and Reid, John and Meng-Papaxanthos, Laetitia and Kosiorek, Adam and Arvaniti, Eirini and Dutordoir, Vincent and De, Soham and Ward, Tom and Hong Wong, Lai and Perino, Matteo and Taylor, Kyle and Cheng, Jun and Latysheva, Natasha and Pan, Joshua and Hariharan, Dhavanthi and Bycroft, Clare and Nicolaisen, Lauren and Hassabis, Demis and Kohli, Pushmeet and Avsec, {\v Z}iga},
+  journal={bioRxiv},
   year={2026},
-  doi={10.1038/s41586-025-10014-0},
-  publisher={Nature Publishing Group UK London}
+  doi={10.64898/2026.11.11.765857},
+  publisher={Cold Spring Harbor Laboratory}
 }
 ```
 
@@ -199,6 +196,26 @@ If you use the AlphaGenome Atlas website or scores, please cite:
   doi = {10.64898/2026.09.16.26363192},
   publisher = {Cold Spring Harbor Laboratory Press},
   journal = {medRxiv}
+}
+```
+
+<!-- enableFinding(SNIPPET_INVALID_LANGUAGE) -->
+
+If you use AlphaGenome 1 in your research, please cite:
+
+<!-- disableFinding(SNIPPET_INVALID_LANGUAGE) -->
+
+```bibtex
+@article{alphagenome,
+  title={Advancing regulatory variant effect prediction with {AlphaGenome}},
+  author={Avsec, {\v Z}iga and Latysheva, Natasha and Cheng, Jun and Novati, Guido and Taylor, Kyle R. and Ward, Tom and Bycroft, Clare and Nicolaisen, Lauren and Arvaniti, Eirini and Pan, Joshua and Thomas, Raina and Dutordoir, Vincent and Perino, Matteo and De, Soham and Karollus, Alexander and Gayoso, Adam and Sargeant, Toby and Mottram, Anne and Wong, Lai Hong and Drot{\'a}r, Pavol and Kosiorek, Adam and Senior, Andrew and Tanburn, Richard and Applebaum, Taylor and Basu, Souradeep and Hassabis, Demis and Kohli, Pushmeet},
+  journal={Nature},
+  volume={649},
+  number={8099},
+  pages={1206--1218},
+  year={2026},
+  doi={10.1038/s41586-025-10014-0},
+  publisher={Nature Publishing Group UK London}
 }
 ```
 

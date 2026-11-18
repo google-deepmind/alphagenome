@@ -18,11 +18,14 @@ of models and the AlphaGenome Atlas, developed by Google DeepMind:
 -   **AlphaGenome 2**: Our latest multimodal DNA sequence model, with improved
     cell-type specificity, generalization to your own human scRNA-seq data
     (expression conditioning), and imputation of unobserved modalities across 1
-    Mb sequences.
+    Mb sequences, described in
+    [Gayoso et al. (2026)](https://doi.org/10.64898/2026.11.11.765857).
 -   **AlphaGenome Atlas**: Genome-wide *in silico* mutagenesis across 9 billion
     human variants, providing pre-computed variant effect scores and the
     AlphaGenome Variant Impact (AVI) score on a
-    [zero-code website](https://alphagenome.google/atlas) and through the API.
+    [zero-code website](https://alphagenome.google/atlas) and through the API,
+    described in
+    [Cheng et al. (2026)](https://doi.org/10.64898/2026.09.16.26363192).
 -   **AlphaGenome 1**: The original model described in
     [Avsec et al. (2026)](https://www.nature.com/articles/s41586-025-10014-0).
 
@@ -135,9 +138,35 @@ $ python3 -m hatch test
 
 ## Citing `alphagenome`
 
-If you use AlphaGenome in your research, please cite using:
-
 <!-- disableFinding(SNIPPET_INVALID_LANGUAGE) -->
+
+If you use AlphaGenome 2 in your research, please cite:
+
+```bibtex
+@article{alphagenome2,
+  title={{AlphaGenome} 2 predicts regulatory activity and variant effects across cell states},
+  author={Gayoso, Adam and Mottram, Anne and Karollus, Alexander and Novati, Guido and Drot{\'a}r, Pavol and Reid, John and Meng-Papaxanthos, Laetitia and Kosiorek, Adam and Arvaniti, Eirini and Dutordoir, Vincent and De, Soham and Ward, Tom and Hong Wong, Lai and Perino, Matteo and Taylor, Kyle and Cheng, Jun and Latysheva, Natasha and Pan, Joshua and Hariharan, Dhavanthi and Bycroft, Clare and Nicolaisen, Lauren and Hassabis, Demis and Kohli, Pushmeet and Avsec, {\v Z}iga},
+  journal={bioRxiv},
+  year={2026},
+  doi={10.64898/2026.11.11.765857},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
+
+If you use AlphaGenome Atlas website, API or scores, please cite:
+
+```bibtex
+@article{alphagenome_atlas,
+  title={{AlphaGenome} Atlas: in silico mutagenesis of the entire human genome improves prioritization and interpretation of non-coding variants},
+  author={Cheng, Jun and Taylor, Kyle R. and Nicolaisen, Lauren and Pan, Joshua and Bycroft, Clare and Perino, Matteo and Ward, Tom and Hawkes, Gareth and Covil, Laura E. and Weilert, Melanie and Thomas, Raina W. and Latysheva, Natasha and Hirschmann, J. Maile and Chen, Xi Dawn and Beaumont, Robin N. and Chundru, V Kartik and Weedon, Michael N. and Bourdareau, Simon and Chu, Hoyin and Hariharan, Dhavanthi and Kagohara, Thais and Ten\'{o}rio, Lucas and Ushigome, Yosuke and Shearer, Courtney A. and Ikica, Barbara and Fang, Ada and Naciri, Mouad and Johnston, Victoria and Green, Richard and Wong, Lai Hong and Dutordoir, Vincent and Mottram, Anne and Gayoso, Adam and Arvaniti, Eirini and Rehm, Heidi L. and Chen, Fei and Lareau, Caleb A. and Wright, Caroline F. and O'Donnell-Luria, Anne and Zeitlinger, Julia and Kohli, Pushmeet and Avsec, {\v Z}iga},
+  year = {2026},
+  doi = {10.64898/2026.09.16.26363192},
+  publisher = {Cold Spring Harbor Laboratory Press},
+  journal = {medRxiv}
+}
+```
+
+If you use AlphaGenome 1 in your research, please cite:
 
 ```bibtex
 @article{alphagenome,
@@ -150,19 +179,6 @@ If you use AlphaGenome in your research, please cite using:
   year={2026},
   doi={10.1038/s41586-025-10014-0},
   publisher={Nature Publishing Group UK London}
-}
-```
-
-If you use AlphaGenome Atlas website, API or scores, please cite:
-
-```bibtex
-@article{alphagenome_atlas,
-  title={{AlphaGenome} Atlas: in silico mutagenesis of the entire human genome improves prioritization and interpretation of non-coding variants},
-  author={Cheng, Jun and Taylor, Kyle R., Nicolaisen, Lauren and Pan, Joshua and Bycroft, Clare and Perino, Matteo and Ward, Tom and Hawkes, Gareth and Covil, Laura E. and Weilert, Melanie and Thomas, Raina W. and Latysheva, Natasha and Hirschmann, J. Maile and Chen, Xi Dawn and Beaumont, Robin N. and Chundru, V Kartik and Weedon, Michael N. and Bourdareau, Simon and Chu, Hoyin and Hariharan, Dhavanthi and Kagohara, Thais and Ten\'{o}rio, Lucas and Ushigome, Yosuke and Shearer, Courtney A. and Ikica, Barbara and Fang, Ada and Naciri, Mouad and Johnston, Victoria and Green, Richard and Wong, Lai Hong and Dutordoir, Vincent and Mottram, Anne and Gayoso, Adam and Arvaniti, Eirini and Rehm, Heidi L. and Chen, Fei and Lareau, Caleb A. and Wright, Caroline F. and O'Donnell-Luria, Anne and Zeitlinger, Julia and Kohli, Pushmeet, and Avsec, {\v Z}iga },
-  year = {2026},
-  doi = {10.64898/2026.09.16.26363192},
-  publisher = {Cold Spring Harbor Laboratory Press},
-  journal = {medRxiv}
 }
 ```
 
