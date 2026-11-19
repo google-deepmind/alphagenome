@@ -160,8 +160,7 @@ outputs and AlphaGenome Atlas scores are for non-commercial research use only,
 must not be used to train machine learning models, and must not be used for
 clinical decision-making. For commercial and enterprise workflows, access
 AlphaGenome on Google Cloud via
-[Model Garden on Gemini Enterprise Agent Platform](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/open-models/alphagenome)
-or contact <alphagenome-cloud-external@google.com>.
+[Model Garden on Gemini Enterprise Agent Platform](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/open-models/alphagenome).
 
 (citing-alphagenome)=
 
