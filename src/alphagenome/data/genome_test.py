@@ -305,6 +305,12 @@ class IntervalTest(parameterized.TestCase):
     self.assertEqual(i2.start, 11)
     self.assertEqual(i2.end, 20)
 
+  def test_resize_none_width_is_a_no_op(self):
+    interval = genome.Interval('chr1', 10, 20, strand='-')
+    i2 = interval.resize(None)
+    self.assertEqual(i2.start, interval.start)
+    self.assertEqual(i2.end, interval.end)
+
   @parameterized.parameters(('+', '-'), ('-', '+'))
   def test_swap_strand(self, before, after):
     interval = genome.Interval('chr1', 10, 20, strand=before)
